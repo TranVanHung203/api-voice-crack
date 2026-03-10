@@ -3,7 +3,7 @@
 import io
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 import edge_tts
@@ -19,7 +19,7 @@ class TTSRequest(BaseModel):
     pitch: str = "+0Hz"
 
 
-@app.post("/tts", response_class=StreamingResponse)
+@app.post("/tts")
 async def text_to_speech(req: TTSRequest):
     """Convert text to speech and return MP3 audio."""
     if not req.text.strip():
@@ -41,8 +41,11 @@ async def text_to_speech(req: TTSRequest):
     if audio_buffer.tell() == 0:
         raise HTTPException(status_code=500, detail="No audio received from service")
 
-    audio_buffer.seek(0)
-    return StreamingResponse(audio_buffer, media_type="audio/mpeg")
+    return Response(
+        content=audio_buffer.getvalue(),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=tts.mp3"},
+    )
 
 
 @app.get("/voices")
