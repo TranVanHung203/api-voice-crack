@@ -24,7 +24,7 @@ app.add_middleware(
 class TTSRequest(BaseModel):
     text: str
     voice: str = "vi-VN-HoaiMyNeural"
-    rate: str = "+0%"
+    rate: str = "-25%"
     volume: str = "+100%"
     pitch: str = "+0Hz"
 
@@ -82,7 +82,7 @@ async def text_to_speech(req: TTSRequest):
 async def text_to_speech_get(
     text: str = Query(description="Text to synthesize"),
     voice: str = Query(default="vi-VN-HoaiMyNeural"),
-    rate: str = Query(default="+0%"),
+    rate: str = Query(default="-10%"),
     volume: str = Query(default="+100%"),
     pitch: str = Query(default="+0Hz"),
 ):
