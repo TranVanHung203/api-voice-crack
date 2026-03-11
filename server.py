@@ -1,11 +1,13 @@
 """FastAPI server wrapping edge-tts for use with Flutter or any HTTP client."""
 
-import io
+from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+# To run the server, use the following command:
+# uvicorn server:app --reload --host 127.0.0.1 --port 8000
 
 import edge_tts
 
@@ -27,13 +29,47 @@ class TTSRequest(BaseModel):
     pitch: str = "+0Hz"
 
 
-@app.post("/tts")
-async def text_to_speech(req: TTSRequest):
-    """Convert text to speech and return MP3 audio."""
-    if not req.text.strip():
+def _build_tts_response(
+    *,
+    text: str,
+    voice: str,
+    rate: str,
+    volume: str,
+    pitch: str,
+) -> StreamingResponse:
+    """Create a streaming MP3 response with minimal buffering."""
+    if not text.strip():
         raise HTTPException(status_code=400, detail="text must not be empty")
 
     communicate = edge_tts.Communicate(
+        text=text,
+        voice=voice,
+        rate=rate,
+        volume=volume,
+        pitch=pitch,
+    )
+
+    async def audio_chunks() -> AsyncGenerator[bytes, None]:
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                yield chunk["data"]
+
+    return StreamingResponse(
+        audio_chunks(),
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": "inline; filename=tts.mp3",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.post("/tts")
+async def text_to_speech(req: TTSRequest):
+    """Convert text to speech and stream MP3 audio."""
+    return _build_tts_response(
         text=req.text,
         voice=req.voice,
         rate=req.rate,
@@ -41,18 +77,22 @@ async def text_to_speech(req: TTSRequest):
         pitch=req.pitch,
     )
 
-    audio_buffer = io.BytesIO()
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_buffer.write(chunk["data"])
 
-    if audio_buffer.tell() == 0:
-        raise HTTPException(status_code=500, detail="No audio received from service")
-
-    return Response(
-        content=audio_buffer.getvalue(),
-        media_type="audio/mpeg",
-        headers={"Content-Disposition": "inline; filename=tts.mp3"},
+@app.get("/tts")
+async def text_to_speech_get(
+    text: str = Query(description="Text to synthesize"),
+    voice: str = Query(default="vi-VN-HoaiMyNeural"),
+    rate: str = Query(default="+0%"),
+    volume: str = Query(default="+0%"),
+    pitch: str = Query(default="+0Hz"),
+):
+    """Convert text to speech and stream MP3 audio from query params."""
+    return _build_tts_response(
+        text=text,
+        voice=voice,
+        rate=rate,
+        volume=volume,
+        pitch=pitch,
     )
 
 
