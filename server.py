@@ -25,7 +25,7 @@ class TTSRequest(BaseModel):
     text: str
     voice: str = "vi-VN-HoaiMyNeural"
     rate: str = "+0%"
-    volume: str = "+0%"
+    volume: str = "+100%"
     pitch: str = "+0Hz"
 
 
@@ -83,7 +83,7 @@ async def text_to_speech_get(
     text: str = Query(description="Text to synthesize"),
     voice: str = Query(default="vi-VN-HoaiMyNeural"),
     rate: str = Query(default="+0%"),
-    volume: str = Query(default="+0%"),
+    volume: str = Query(default="+100%"),
     pitch: str = Query(default="+0Hz"),
 ):
     """Convert text to speech and stream MP3 audio from query params."""
