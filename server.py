@@ -1,5 +1,6 @@
 """FastAPI server wrapping edge-tts for use with Flutter or any HTTP client."""
 
+import socket
 from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, Query
@@ -7,11 +8,33 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 # To run the server, use the following command:
-# uvicorn server:app --reload --host 127.0.0.1 --port 8000
+# uvicorn server:app --host 0.0.0.0 --port 8000
+#
+# LDPlayer / Android emulator: connect from inside emulator via http://10.0.2.2:8000
+# Local browser / same machine:  http://127.0.0.1:8000
 
 import edge_tts
 
 app = FastAPI(title="edge-tts API")
+
+
+@app.on_event("startup")
+async def print_urls() -> None:
+    port = 8000
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        lan_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        lan_ip = "unavailable"
+    print("\n" + "=" * 50)
+    print("  edge-tts server is running!")
+    print("=" * 50)
+    print(f"  Local (same machine) : http://127.0.0.1:{port}")
+    print(f"  LDPlayer / Emulator  : http://10.0.2.2:{port}")
+    print(f"  LAN (other devices)  : http://{lan_ip}:{port}")
+    print("=" * 50 + "\n")
 
 app.add_middleware(
     CORSMiddleware,
