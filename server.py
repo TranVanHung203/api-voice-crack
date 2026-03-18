@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 import edge_tts
 
-app = FastAPI(title="edge-tts API")
+app = FastAPI(title="edge-tts API vCache")
 
 
 @app.on_event("startup")
