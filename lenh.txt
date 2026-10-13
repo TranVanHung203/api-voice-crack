@@ -1,0 +1,1 @@
+py -3.11 -c "from zerotts_backend import zerotts_backend; print(zerotts_backend.install_voice_pack(r'C:\duong-dan\giong-moi.zip'))"

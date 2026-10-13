@@ -74,3 +74,172 @@ Other projects that use the `edge-tts` module include:
 * [hass-edge-tts](https://github.com/hasscc/hass-edge-tts/blob/main/custom_components/edge_tts/tts.py)
 * [Podcastfy](https://github.com/souzatharsis/podcastfy/blob/main/podcastfy/tts/providers/edge.py)
 * [tts-samples](https://github.com/yaph/tts-samples/blob/main/bin/create_sound_samples.py) - a collection of [mp3 sound samples](https://github.com/yaph/tts-samples/tree/main/mp3) to facilitate picking a voice for your project.
+
+## FastAPI: V-TTS Zero-Shot
+
+The API server also exposes non-streaming Vietnamese zero-shot voice cloning.
+Install the server dependencies and start it from the repository root:
+
+```powershell
+pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+Register a voice once by sending its reference recording to `POST
+/vtts/voices`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/vtts/voices \
+  -F "voice_id=hung" \
+  -F "reference_audio=@voice.wav"
+```
+
+The server extracts the speaker and prosody embeddings and persists them under
+`models/vtts/voices`. Subsequent requests need only JSON text and the returned
+`voice_id`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/vtts/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"hung","text":"Xin chào, đây là giọng nói được nhân bản."}' \
+  --output cloned.wav
+```
+
+`GET /vtts/voices` lists registered profiles. For one-off synthesis, `POST
+/vtts/clone` is also available and accepts the text and reference in the same
+request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/vtts/clone \
+  -F "text=Xin chào." \
+  -F "reference_audio=@voice.wav" \
+  --output cloned.wav
+```
+
+Registered voices can also be used through the existing `GET /tts` route by
+passing only `text` and `voiceid`:
+
+```bash
+curl "http://127.0.0.1:8000/tts?text=Xin%20chào&voiceid=hung" \
+  --output cloned.wav
+```
+
+When `voiceid` is omitted, `GET /tts` keeps its original Edge TTS behavior and
+returns MP3. When `voiceid` is present, it uses the persisted V-TTS profile and
+returns WAV, unless the ID belongs to an installed ZeroTTS pack.
+
+Use a clean, single-speaker reference recording of about 3-10 seconds. WAV,
+MP3, FLAC, and OGG files up to 25 MiB are accepted. Optional form fields are
+`length_scale` (default `1.0`), `noise_scale` (default `0.667`), and
+`noise_scale_w` (default `0.8`). Lower `length_scale` values speak faster.
+
+The model is loaded on the first request and cached in memory. Model files are
+stored under `models/vtts` by default. The following environment variables can
+override the defaults:
+
+- `VTTS_DEVICE`: `cpu` (default), `cuda`, or `auto`.
+- `VTTS_MODEL_DIR`: directory used for downloaded model files.
+- `VTTS_HF_REPO`: Hugging Face Space used to download the model files.
+- `VTTS_CHECKPOINT_PATH`, `VTTS_CONFIG_PATH`, `VTTS_HASP_PATH`: explicit model
+  file paths for offline deployments.
+- `VTTS_TEMP_DIR`: temporary reference-audio directory.
+- `VTTS_MAX_REFERENCE_BYTES`: upload limit in bytes.
+
+V-TTS is licensed under CC BY-NC 4.0 and is restricted to non-commercial use
+unless you obtain separate permission from its author.
+
+## FastAPI: ZeroTTS voice packs
+
+ZeroTTS is a separate, CPU-friendly ONNX backend. Install a downloaded ZeroTTS
+voice ZIP once; do not unzip it manually:
+
+```powershell
+python -c "from zerotts_backend import zerotts_backend; print(zerotts_backend.install_voice_pack(r'C:\path\voice.zip'))"
+```
+
+Installed packs are stored under `models/zerotts/voices`. List them without
+loading the model:
+
+```bash
+curl http://127.0.0.1:8000/zerotts/voices
+```
+
+Synthesize a WAV with the dedicated JSON endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/zerotts/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"VpYLlCQEgcoHgycJstNP","text":"Xin chao, day la ZeroTTS."}' \
+  --output zerotts.wav
+```
+
+The existing GET route auto-detects locally installed ZeroTTS IDs:
+
+```bash
+curl "http://127.0.0.1:8000/tts?text=Xin%20chao&voiceid=VpYLlCQEgcoHgycJstNP" \
+  --output zerotts.wav
+```
+
+The unified JSON route supports the same voice. Both `voiceid` and `voice_id`
+are accepted:
+
+```bash
+curl -X POST http://127.0.0.1:8000/tts \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Xin chao.","voiceid":"VpYLlCQEgcoHgycJstNP"}' \
+  --output zerotts.wav
+```
+
+For clients that only have a `voice` field, putting the installed ZeroTTS ID in
+that field is auto-detected too. Existing Edge TTS JSON requests remain
+unchanged.
+
+The server uses the upstream ZeroTTS synthesis defaults, including
+`audio_temperature=0.8` and one trailing codec frame (`eoa_extra_frames=1`).
+You can override `eoa_extra_frames` from `1` to `12` in JSON or as a GET query
+parameter.
+
+ZeroTTS returns the original synthesized audio without speed adjustment;
+`rate` applies only to Edge TTS.
+Sampling uses the configured fixed seed (the `_SAMPLING_SEED` constant in
+`zerotts_backend.py`) to repeat readings for the same inputs and runtime.
+Web-panel defaults are `cfg_scale=1.0` (Voice Similarity),
+`audio_temperature=0.8`, `audio_repetition_penalty=1.2`, and
+`max_chunk_sec=15.0` (Max segment). The backend normalizes Vietnamese text
+and punctuation, then splits it using the upstream estimated-duration chunker.
+The 15-second setting is a text segmentation budget, not a hard audio cutoff;
+`max_frames=1500` remains the model generation limit per segment. The seed is
+set once per request, and consecutive segments continue the same random stream.
+The non-streaming WAV joins segments with a 0.32-second pause.
+`POST /zerotts/synthesize` accepts overrides for these sampling and chunk settings.
+
+ZeroTTS caches generated WAV audio under `models/zerotts/audio_cache` (or
+`ZEROTTS_DATA_DIR/audio_cache`). Both `/tts` and `/zerotts/synthesize` reuse
+the same cache. Cached audio survives server restarts and can be returned
+without loading the model; recent audio is also kept in a bounded 64 MiB RAM
+cache. The key includes text, voice, seed, generation settings, model/runtime
+configuration and local model/voice file fingerprints. Changing these inputs
+generates a new entry. To regenerate previously cached audio, stop the server,
+remove the files in the audio cache directory, then restart it.
+
+Use `provider=edge`, `provider=vtts`, or `provider=zerotts` to select a backend
+explicitly. The ZeroTTS model is downloaded on its first synthesis request and
+cached under `models/zerotts/cache`; the installed voice list does not trigger a
+model download.
+
+Voice packs committed with the application can be placed under
+`voice_packs/zerotts`. The provided `chi tham` pack is already bundled there, so
+it remains available in Git, Docker, Render, and Fly deployments.
+
+Configuration:
+
+- `ZEROTTS_DATA_DIR`: root for the cache and installed voice packs.
+- `ZEROTTS_BUNDLED_VOICES_DIR`: override the bundled voice-pack directory.
+- `ZEROTTS_CACHE_DIR`: override the Hugging Face model cache directory.
+- `ZEROTTS_MODEL_ID`: Hugging Face model ID (default `zeroweight-ai/ZeroTTS`).
+- `ZEROTTS_MODEL_DIR`: use an already downloaded model directory.
+- `ZEROTTS_REVISION`: optional Hugging Face revision or commit SHA.
+- `ZEROTTS_PROVIDERS`: comma-separated ONNX Runtime providers.
+- `ZEROTTS_THREADS`: ONNX CPU inference threads (default `4`).
+- `ZEROTTS_WARMUP`: set to `0` to skip model warmup.
+- `ZEROTTS_LOCAL_FILES_ONLY`: set to `1` to disable model downloads.
