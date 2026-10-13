@@ -235,7 +235,10 @@ class ZeroTTSSynthesisRequest(BaseModel):
     cfg_scale: float = Field(default=1.0, ge=0.0, le=5.0)
     audio_temperature: float = Field(default=0.8, gt=0.0, le=2.0)
     audio_repetition_penalty: float = Field(default=1.2, ge=1.0, le=2.0)
-    max_chunk_sec: float = Field(default=15.0, ge=1.0, le=30.0)
+    max_chunk_sec: float = Field(
+        default=15.0, ge=1.0, le=30.0, deprecated=True,
+        description="Ignored: ZeroTTS now synthesizes the entire text in one call",
+    )
     max_frames: int = Field(default=1500, ge=4, le=1500)
     eoa_extra_frames: int = Field(default=1, ge=1, le=12)
 
@@ -491,7 +494,6 @@ async def synthesize_zerotts_voice(req: ZeroTTSSynthesisRequest):
                 cfg_scale=req.cfg_scale,
                 audio_temperature=req.audio_temperature,
                 audio_repetition_penalty=req.audio_repetition_penalty,
-                max_chunk_sec=req.max_chunk_sec,
                 max_frames=req.max_frames,
                 eoa_extra_frames=req.eoa_extra_frames,
             )

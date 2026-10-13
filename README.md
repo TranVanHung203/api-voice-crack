@@ -203,15 +203,16 @@ ZeroTTS returns the original synthesized audio without speed adjustment;
 `rate` applies only to Edge TTS.
 Sampling uses the configured fixed seed (the `_SAMPLING_SEED` constant in
 `zerotts_backend.py`) to repeat readings for the same inputs and runtime.
-Web-panel defaults are `cfg_scale=1.0` (Voice Similarity),
-`audio_temperature=0.8`, `audio_repetition_penalty=1.2`, and
-`max_chunk_sec=15.0` (Max segment). The backend normalizes Vietnamese text
-and punctuation, then splits it using the upstream estimated-duration chunker.
-The 15-second setting is a text segmentation budget, not a hard audio cutoff;
-`max_frames=1500` remains the model generation limit per segment. The seed is
-set once per request, and consecutive segments continue the same random stream.
-The non-streaming WAV joins segments with a 0.32-second pause.
-`POST /zerotts/synthesize` accepts overrides for these sampling and chunk settings.
+Sampling defaults are `cfg_scale=1.0` (Voice Similarity),
+`audio_temperature=0.8` and `audio_repetition_penalty=1.2`.
+The backend normalizes Vietnamese text and punctuation, then sends the entire
+text to the model in a single synthesis call, without splitting or adding pauses.
+`max_chunk_sec` is retained as an ignored compatibility parameter.
+`max_frames=1500` remains the generation limit for the whole request, so very
+long text can reach that limit. A single call removes segment boundaries but
+does not guarantee a consistent dialect from the model.
+`POST /zerotts/synthesize` accepts overrides for the sampling settings.
+The cache version was updated so previously segmented audio is not reused.
 
 ZeroTTS caches generated WAV audio under `models/zerotts/audio_cache` (or
 `ZEROTTS_DATA_DIR/audio_cache`). Both `/tts` and `/zerotts/synthesize` reuse

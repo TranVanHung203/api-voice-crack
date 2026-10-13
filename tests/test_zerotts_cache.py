@@ -38,7 +38,7 @@ def test_ram_and_disk_hits_skip_model_loading(backend, monkeypatch):
 @pytest.mark.parametrize("change", [
     {"text": "Khac"}, {"voice_id": "maichi"}, {"cfg_scale": 1.1},
     {"audio_temperature": 0.7}, {"audio_repetition_penalty": 1.3},
-    {"max_chunk_sec": 10}, {"max_frames": 500}, {"eoa_extra_frames": 4},
+    {"max_frames": 500}, {"eoa_extra_frames": 4},
 ])
 def test_generation_settings_invalidate_cache(backend, monkeypatch, change):
     calls = []
@@ -52,6 +52,15 @@ def test_generation_settings_invalidate_cache(backend, monkeypatch, change):
     backend.synthesize_wav("Xin chao", "hamy")
     backend.synthesize_wav(**({"text": "Xin chao", "voice_id": "hamy"} | change))
     assert len(calls) == 2
+
+
+def test_legacy_chunk_setting_does_not_change_audio_cache(backend, monkeypatch):
+    calls = []
+    wav = backend._encode_wav(np.zeros(4800), 48_000)
+    monkeypatch.setattr(backend, "_synthesize_uncached", lambda *a, **k: calls.append(k) or wav)
+    backend.synthesize_wav("Xin chao", "hamy", max_chunk_sec=1)
+    backend.synthesize_wav("Xin chao", "hamy", max_chunk_sec=15)
+    assert len(calls) == 1
 
 
 def test_seed_and_voice_changes_invalidate_cache(backend, monkeypatch):

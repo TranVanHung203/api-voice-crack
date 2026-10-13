@@ -272,7 +272,7 @@ class ZeroTTSBackend:
             except OSError:
                 continue
         payload = {
-            "version": 1, "text": text, "voice_id": voice_id,
+            "version": 2, "text": text, "voice_id": voice_id,
             "seed": _SAMPLING_SEED, "options": options, "files": fingerprints,
             "model": os.getenv("ZEROTTS_MODEL_ID", _DEFAULT_MODEL_ID),
             "model_dir": configured_dir,
@@ -312,7 +312,7 @@ class ZeroTTSBackend:
         options = {
             "cfg_scale": float(cfg_scale), "audio_temperature": float(audio_temperature),
             "audio_repetition_penalty": float(audio_repetition_penalty),
-            "max_chunk_sec": float(max_chunk_sec), "max_frames": int(max_frames),
+            "max_frames": int(max_frames),
             "eoa_extra_frames": int(eoa_extra_frames),
         }
         # Also prevents duplicate work for simultaneous identical requests.
@@ -357,7 +357,6 @@ class ZeroTTSBackend:
         cfg_scale: float = 1.0,
         audio_temperature: float = 0.8,
         audio_repetition_penalty: float = 1.2,
-        max_chunk_sec: float = 15.0,
         max_frames: int = 1500,
         eoa_extra_frames: int = 1,
     ) -> bytes:
@@ -366,40 +365,30 @@ class ZeroTTSBackend:
         engine = self._load_engine()
         try:
             import numpy as np
-            from zerotts.audio import concat_with_silence
             from zerotts.chunking import (
-                chunk_text,
                 clean_segment_punctuation,
                 normalize_punctuation,
             )
             from zerotts.text_norm import normalize_vi_text
 
-            # Match the web's estimated segment duration, not a hard audio cut.
-            normalized = normalize_punctuation(normalize_vi_text(text))
-            segments = [
-                segment
-                for raw in chunk_text(normalized, max_chunk_sec=max_chunk_sec)
-                if (segment := clean_segment_punctuation(raw))
-            ]
+            normalized = clean_segment_punctuation(
+                normalize_punctuation(normalize_vi_text(text))
+            )
 
             # ZeroTTS 0.1.5 uses NumPy's global RNG for sampling.
             with _SAMPLING_LOCK:
                 previous_state = np.random.get_state()
                 try:
                     np.random.seed(_SAMPLING_SEED)
-                    chunks = [
-                        engine.synthesize(
-                            segment,
-                            voice=voice_id,
-                            cfg_scale=cfg_scale,
-                            audio_temperature=audio_temperature,
-                            audio_repetition_penalty=audio_repetition_penalty,
-                            max_frames=max_frames,
-                            eoa_extra_frames=eoa_extra_frames,
-                        )
-                        for segment in segments
-                    ]
-                    audio = concat_with_silence(chunks, 0.32, engine.sample_rate)
+                    audio = engine.synthesize(
+                        normalized,
+                        voice=voice_id,
+                        cfg_scale=cfg_scale,
+                        audio_temperature=audio_temperature,
+                        audio_repetition_penalty=audio_repetition_penalty,
+                        max_frames=max_frames,
+                        eoa_extra_frames=eoa_extra_frames,
+                    )
                 finally:
                     np.random.set_state(previous_state)
             return self._encode_wav(audio, engine.sample_rate)

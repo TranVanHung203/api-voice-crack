@@ -65,7 +65,6 @@ def test_zerotts_synthesize_returns_wav(monkeypatch) -> None:
             "cfg_scale": 1.2,
             "audio_temperature": 0.7,
             "audio_repetition_penalty": 1.3,
-            "max_chunk_sec": 10.0,
             "max_frames": 500,
             "eoa_extra_frames": 4,
         },
@@ -270,7 +269,7 @@ def test_zerotts_web_defaults_and_repeatability(monkeypatch) -> None:
     assert before[2:] == after[2:]
 
 
-def test_zerotts_splits_long_text_without_losing_words(monkeypatch) -> None:
+def test_zerotts_generates_entire_long_text_once(monkeypatch) -> None:
     calls = []
 
     def generate(text, **_options):
@@ -282,8 +281,7 @@ def test_zerotts_splits_long_text_without_losing_words(monkeypatch) -> None:
         sample_rate=48_000, synthesize=generate
     ))
     text = " ".join(["Kh\u00e1m ph\u00e1"] * 40)
-    audio = backend.synthesize_wav(text, "hamy")
-    assert len(calls) > 1
-    assert " ".join(c.rstrip(".") for c in calls) == text
+    audio = backend.synthesize_wav(text, "hamy", max_chunk_sec=1)
+    assert calls == [text + "."]
     with wave.open(BytesIO(audio)) as w:
-        assert w.getnframes() == len(calls) * 4800 + (len(calls) - 1) * 15360
+        assert w.getnframes() == 4800
