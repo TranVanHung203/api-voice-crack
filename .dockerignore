@@ -3,4 +3,16 @@ fly.toml
 __pycache__/
 .envrc
 .venv/
+.venv-rvc/
+.vscode/
+.pytest_cache/
+.tmp_vieneu/
+vendor/
+tests/
+tools/
+.env
+.env.*
+*.log
+*.mp3
+*.wav
 models/

@@ -65,6 +65,7 @@ def test_zerotts_synthesize_returns_wav(monkeypatch) -> None:
             "cfg_scale": 1.2,
             "audio_temperature": 0.7,
             "audio_repetition_penalty": 1.3,
+            "max_chunk_sec": 10.0,
             "max_frames": 500,
             "eoa_extra_frames": 4,
         },
@@ -245,6 +246,8 @@ def test_get_tts_rejects_unknown_provider() -> None:
 
 def test_zerotts_web_defaults_and_repeatability(monkeypatch) -> None:
     monkeypatch.setattr(zerotts_backend, "_SAMPLING_SEED", 28)
+    monkeypatch.setattr(zerotts_backend, "_MIN_FRAMES", 12)
+    monkeypatch.setattr(zerotts_backend, "_TEXT_TEMPERATURE", 0.7)
     calls = []
 
     def generate(text, **options):
@@ -260,7 +263,9 @@ def test_zerotts_web_defaults_and_repeatability(monkeypatch) -> None:
     assert first == backend.synthesize_wav("Kh\u00e1m ph\u00e1", "hamy")
     assert calls[0] == ("Kh\u00e1m ph\u00e1.", {
         "voice": "hamy", "cfg_scale": 1.0, "audio_temperature": 0.8,
-        "audio_repetition_penalty": 1.2, "max_frames": 1500, "eoa_extra_frames": 1,
+        "text_temperature": 0.7,
+        "audio_repetition_penalty": 1.2, "min_frames": 12,
+        "max_frames": 1500, "eoa_extra_frames": 1,
     })
     expected = np.random.RandomState(28).random((1, 4800)).astype(np.float32)
     assert first == backend._encode_wav(expected, 48_000)
@@ -269,7 +274,7 @@ def test_zerotts_web_defaults_and_repeatability(monkeypatch) -> None:
     assert before[2:] == after[2:]
 
 
-def test_zerotts_generates_entire_long_text_once(monkeypatch) -> None:
+def test_zerotts_splits_long_sentence_without_losing_words(monkeypatch) -> None:
     calls = []
 
     def generate(text, **_options):
@@ -282,6 +287,64 @@ def test_zerotts_generates_entire_long_text_once(monkeypatch) -> None:
     ))
     text = " ".join(["Kh\u00e1m ph\u00e1"] * 40)
     audio = backend.synthesize_wav(text, "hamy", max_chunk_sec=1)
-    assert calls == [text + "."]
+    assert len(calls) > 1
+    assert all(len(chunk.rstrip(".")) <= 15 for chunk in calls)
+    assert " ".join(chunk.rstrip(".") for chunk in calls) == text
     with wave.open(BytesIO(audio)) as w:
-        assert w.getnframes() == 4800
+        assert w.getnframes() == 4800 * len(calls) + 9600 * (len(calls) - 1)
+
+
+def test_zerotts_generates_sample_sentences_in_order_with_same_settings(monkeypatch):
+    sentences = [
+        "Hôm nay, Tiểu Ngưu cùng các bạn đi ra vườn.",
+        "Các bạn nhìn thấy rất nhiều quả cam.",
+        "Cùng đếm xem có tất cả bao nhiêu quả nhé!",
+    ]
+    calls = []
+
+    def generate(text, **options):
+        calls.append((text, options))
+        return np.full((1, 4800), len(calls) * 0.1, dtype=np.float32)
+
+    backend = ZeroTTSBackend()
+    monkeypatch.setattr(backend, "_load_engine", lambda: SimpleNamespace(
+        sample_rate=48_000, synthesize=generate
+    ))
+    audio = backend.synthesize_wav("\n".join(sentences), "VpYLlCQEgcoHgycJstNP")
+    assert [text for text, _ in calls] == sentences
+    assert all(options == {
+        "voice": "VpYLlCQEgcoHgycJstNP", "cfg_scale": 1.0,
+        "text_temperature": 1.0,
+        "audio_temperature": 0.8, "audio_repetition_penalty": 1.2,
+        "min_frames": 4,
+        "max_frames": 1500, "eoa_extra_frames": 1,
+    } for _, options in calls)
+    expected = np.concatenate([
+        np.full(4800, 0.1, dtype=np.float32), np.zeros(9600),
+        np.full(4800, 0.2, dtype=np.float32), np.zeros(9600),
+        np.full(4800, 0.3, dtype=np.float32),
+    ])
+    assert audio == backend._encode_wav(expected, 48_000)
+    assert backend.synthesize_wav("\n".join(sentences), "VpYLlCQEgcoHgycJstNP") == audio
+    assert len(calls) == 3
+
+
+def test_zerotts_chunked_sampling_is_repeatable_and_restores_rng(monkeypatch):
+    monkeypatch.setattr(zerotts_backend, "_SAMPLING_SEED", 28)
+    backend = ZeroTTSBackend()
+    monkeypatch.setattr(backend, "_load_engine", lambda: SimpleNamespace(
+        sample_rate=48_000,
+        synthesize=lambda *a, **k: np.random.random((1, 4800)).astype(np.float32),
+    ))
+    before = np.random.get_state()
+    first = backend._synthesize_uncached("Khám phá. Xin chào!", "hamy")
+    assert first == backend._synthesize_uncached("Khám phá. Xin chào!", "hamy")
+    rng = np.random.RandomState(28)
+    expected = np.concatenate([
+        rng.random(4800).astype(np.float32), np.zeros(9600),
+        rng.random(4800).astype(np.float32),
+    ])
+    assert first == backend._encode_wav(expected, 48_000)
+    after = np.random.get_state()
+    np.testing.assert_array_equal(before[1], after[1])
+    assert before[2:] == after[2:]

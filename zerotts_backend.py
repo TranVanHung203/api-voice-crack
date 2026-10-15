@@ -23,6 +23,12 @@ _DEFAULT_MODEL_ID = "zeroweight-ai/ZeroTTS"
 _VOICE_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
 _SAMPLING_LOCK = threading.Lock()
 _SAMPLING_SEED = 21031999
+# Minimum generated frames per chunk. Restart the server after changing this.
+_MIN_FRAMES = 4
+# Text-token sampling temperature. Restart the server after changing this.
+_TEXT_TEMPERATURE = 1.0
+_TAIL_PAUSE_MS = 80
+_CHUNK_SILENCE_SEC = 0.2
 _AUDIO_RAM_MAX_BYTES = 64 * 1024 * 1024
 
 
@@ -247,6 +253,47 @@ class ZeroTTSBackend:
     def _audio_cache_dir(cls) -> Path:
         return cls._data_dir() / "audio_cache"
 
+    @staticmethod
+    def _shorten_tail_pause(audio: Any, sample_rate: int, max_pause_ms: int) -> Any:
+        """Shorten one near-silent gap before final speech; preserve speech samples."""
+        import numpy as np
+
+        if max_pause_ms <= 0:
+            return audio
+        samples = np.asarray(audio).reshape(-1)
+        window = max(1, round(sample_rate * 0.01))
+        if samples.size < window:
+            return audio
+        padded = np.pad(samples, (0, (-len(samples)) % window))
+        rms = np.sqrt(np.mean(padded.reshape(-1, window).astype(np.float64) ** 2, axis=1))
+        if rms.max() < 1e-5:
+            return audio
+        # Conservative noise-floor threshold: avoid treating quiet phones as silence.
+        threshold = max(1e-5, min(5e-4, float(rms.max()) * 0.005))
+        silent = rms < threshold
+        voiced = np.flatnonzero(~silent)
+        if not voiced.size:
+            return audio
+        changes = np.diff(np.r_[False, silent, False].astype(np.int8))
+        starts, ends = np.flatnonzero(changes == 1), np.flatnonzero(changes == -1)
+        for start, end in reversed(list(zip(starts, ends))):
+            duration = (end - start) * window / sample_rate
+            if not (0.16 <= duration <= 0.8) or end >= voiced[-1]:
+                continue
+            if start * window < len(samples) - 1.5 * sample_rate:
+                continue
+            if (voiced[-1] + 1 - end) * window > 0.8 * sample_rate:
+                continue
+            keep = round(sample_rate * max_pause_ms / 1000)
+            gap_start, gap_end = int(start * window), int(end * window)
+            if gap_end - gap_start <= keep:
+                return audio
+            # Keep both edges of the quiet gap, protecting the final consonant onset.
+            cut_start = gap_start + keep // 2
+            cut_end = gap_end - (keep - keep // 2)
+            return np.concatenate((samples[:cut_start], samples[cut_end:]))
+        return audio
+
     def _audio_cache_key(self, text: str, voice_id: str, options: dict) -> str:
         configured_dir = os.getenv("ZEROTTS_MODEL_DIR")
         model_dirs = (
@@ -272,7 +319,11 @@ class ZeroTTSBackend:
             except OSError:
                 continue
         payload = {
-            "version": 2, "text": text, "voice_id": voice_id,
+            "version": 4, "text": text, "voice_id": voice_id,
+            "chunk_silence_sec": _CHUNK_SILENCE_SEC,
+            "min_frames": _MIN_FRAMES,
+            "text_temperature": _TEXT_TEMPERATURE,
+            "tail_pause_ms": _TAIL_PAUSE_MS,
             "seed": _SAMPLING_SEED, "options": options, "files": fingerprints,
             "model": os.getenv("ZEROTTS_MODEL_ID", _DEFAULT_MODEL_ID),
             "model_dir": configured_dir,
@@ -312,6 +363,7 @@ class ZeroTTSBackend:
         options = {
             "cfg_scale": float(cfg_scale), "audio_temperature": float(audio_temperature),
             "audio_repetition_penalty": float(audio_repetition_penalty),
+            "max_chunk_sec": float(max_chunk_sec),
             "max_frames": int(max_frames),
             "eoa_extra_frames": int(eoa_extra_frames),
         }
@@ -357,40 +409,62 @@ class ZeroTTSBackend:
         cfg_scale: float = 1.0,
         audio_temperature: float = 0.8,
         audio_repetition_penalty: float = 1.2,
+        max_chunk_sec: float = 15.0,
         max_frames: int = 1500,
         eoa_extra_frames: int = 1,
     ) -> bytes:
-        """Synthesize one complete utterance using a ZeroTTS voice pack."""
+        """Generate bounded sentence chunks and join them into one WAV."""
         voice_id = self._validate_voice_id(voice_id)
         engine = self._load_engine()
         try:
             import numpy as np
+            from zerotts.audio import concat_with_silence
             from zerotts.chunking import (
                 clean_segment_punctuation,
+                chunk_text,
                 normalize_punctuation,
+                split_sentences,
             )
             from zerotts.text_norm import normalize_vi_text
 
-            normalized = clean_segment_punctuation(
-                normalize_punctuation(normalize_vi_text(text))
-            )
+            normalized = normalize_punctuation(normalize_vi_text(text))
+            segments = [
+                cleaned
+                for sentence in split_sentences(normalized)
+                for chunk in chunk_text(sentence, max_chunk_sec=max_chunk_sec)
+                if (cleaned := clean_segment_punctuation(chunk))
+            ]
+            chunks = []
 
             # ZeroTTS 0.1.5 uses NumPy's global RNG for sampling.
             with _SAMPLING_LOCK:
                 previous_state = np.random.get_state()
                 try:
                     np.random.seed(_SAMPLING_SEED)
-                    audio = engine.synthesize(
-                        normalized,
-                        voice=voice_id,
-                        cfg_scale=cfg_scale,
-                        audio_temperature=audio_temperature,
-                        audio_repetition_penalty=audio_repetition_penalty,
-                        max_frames=max_frames,
-                        eoa_extra_frames=eoa_extra_frames,
-                    )
+                    for segment in segments:
+                        audio = engine.synthesize(
+                            segment,
+                            voice=voice_id,
+                            cfg_scale=cfg_scale,
+                            text_temperature=_TEXT_TEMPERATURE,
+                            audio_temperature=audio_temperature,
+                            audio_repetition_penalty=audio_repetition_penalty,
+                            min_frames=_MIN_FRAMES,
+                            max_frames=max_frames,
+                            eoa_extra_frames=eoa_extra_frames,
+                        )
+                        # Preserve explicit punctuation pauses within each chunk.
+                        last_words = " ".join(segment.rstrip(".!?").split()[-3:])
+                        if not re.search(r"[,;:.!?]", last_words):
+                            audio = self._shorten_tail_pause(
+                                audio, engine.sample_rate, _TAIL_PAUSE_MS
+                            )
+                        chunks.append(audio)
                 finally:
                     np.random.set_state(previous_state)
+            audio = concat_with_silence(
+                chunks, silence_sec=_CHUNK_SILENCE_SEC, sample_rate=engine.sample_rate
+            )
             return self._encode_wav(audio, engine.sample_rate)
         except FileNotFoundError as exc:
             raise ZeroTTSVoiceNotFoundError(

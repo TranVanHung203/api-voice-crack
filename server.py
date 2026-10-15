@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import os
 import socket
+import sys
 import uuid
 import aiohttp
 from collections import OrderedDict
@@ -12,6 +13,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 # To run the server, use the following command:
 # uvicorn server:app --host 0.0.0.0 --port 8000
@@ -19,6 +21,8 @@ from pydantic import BaseModel, Field
 # LDPlayer / Android emulator: connect from inside emulator via http://10.0.2.2:8000
 # Local browser / same machine:  http://127.0.0.1:8000
 
+# Use the repository's patched Edge client for every entry point, including uvicorn.
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 import edge_tts
 from edge_tts.exceptions import EdgeTTSException, NoAudioReceived
 from vtts_backend import (
@@ -35,9 +39,27 @@ from zerotts_backend import (
     zerotts_backend,
 )
 
+# Set True to override client voice IDs; set FIXED_VOICE_ID to your installed ID.
+# Restart the server after changing these settings.
+FORCE_VOICE_ID = False
+FIXED_VOICE_ID = "hamy"
+
+
+def _effective_voice_id(requested_voice_id: str | None) -> str | None:
+    if not FORCE_VOICE_ID:
+        return requested_voice_id
+    fixed_voice_id = FIXED_VOICE_ID.strip()
+    if not fixed_voice_id:
+        raise HTTPException(
+            status_code=503,
+            detail="FIXED_VOICE_ID must be set when FORCE_VOICE_ID is enabled",
+        )
+    return fixed_voice_id
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    port = 8000
+    port = int(os.getenv("PORT", "8000"))
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -56,17 +78,31 @@ async def lifespan(_app: FastAPI):
     _load_disk_cache()
     # Pre-warm connection to Microsoft TTS servers by fully completing a request.
     # This puts the TCP/TLS connection back into aiohttp's pool for reuse.
-    try:
+    async def warm_edge():
         communicate = edge_tts.Communicate(text=".", voice="vi-VN-HoaiMyNeural")
         async for _ in communicate.stream():
             pass  # Consume all chunks so the connection closes cleanly and is pooled
         print("  [warmup] Connection to TTS server pre-warmed.\n")
-    except Exception:
-        pass  # Warmup failure is non-critical
+    if os.getenv("EDGE_WARMUP", "1").lower() not in {"0", "false", "no"}:
+        try:
+            await asyncio.wait_for(warm_edge(), timeout=5)
+        except Exception:
+            pass  # Warmup failure must not block startup.
     yield
 
 
 app = FastAPI(title="edge-tts API vCache", lifespan=lifespan)
+
+
+@app.get("/", include_in_schema=False)
+async def api_home():
+    return RedirectResponse("/docs")
+
+
+@app.get("/health")
+async def health():
+    """Liveness check that does not load models or call external services."""
+    return {"status": "ok"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,10 +116,10 @@ app.add_middleware(
 # Audio LRU cache — persisted to disk at models/cache/<key>.mp3
 # Key: MD5 of (text, voice, rate, volume, pitch).
 # - Survives server restarts (loaded from disk on startup).
-# - Max _CACHE_MAX_SIZE files on disk; oldest file deleted when limit exceeded.
-# - Hot LRU in RAM avoids even disk reads for recently used entries.
+# - Hot LRU in RAM is limited to 64 MiB; disk retains generated audio.
 # ---------------------------------------------------------------------------
-_CACHE_DIR = Path("models/cache")
+_CACHE_DIR = Path(os.getenv("EDGE_AUDIO_CACHE_DIR", "models/cache"))
+_EDGE_RAM_MAX_BYTES = 64 * 1024 * 1024
 _audio_cache: OrderedDict[str, bytes] = OrderedDict()   # in-RAM hot cache
 _cache_locks: dict[str, asyncio.Lock] = {}
 
@@ -101,9 +137,15 @@ def _load_disk_cache() -> None:
     Files are ordered by modification time (oldest first) to respect LRU eviction."""
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
     files = sorted(_CACHE_DIR.glob("*.mp3"), key=lambda p: p.stat().st_mtime)
-    for f in files:
-        key = f.stem
-        _audio_cache[key] = f.read_bytes()
+    budget = _EDGE_RAM_MAX_BYTES
+    selected = []
+    for f in reversed(files):
+        size = f.stat().st_size
+        if size <= budget:
+            selected.append(f)
+            budget -= size
+    for f in reversed(selected):
+        _remember_edge_audio(f.stem, f.read_bytes())
     if _audio_cache:
         print(f"  [cache] Loaded {len(_audio_cache)} cached audio file(s) from disk.\n")
 
@@ -111,6 +153,15 @@ def _load_disk_cache() -> None:
 def _save_to_disk(key: str, data: bytes) -> None:
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
     _cache_path(key).write_bytes(data)
+
+
+def _remember_edge_audio(key: str, data: bytes) -> None:
+    _audio_cache.pop(key, None)
+    if len(data) > _EDGE_RAM_MAX_BYTES:
+        return
+    _audio_cache[key] = data
+    while sum(map(len, _audio_cache.values())) > _EDGE_RAM_MAX_BYTES:
+        _audio_cache.popitem(last=False)
 
 
 async def _get_audio(text: str, voice: str, rate: str, volume: str, pitch: str) -> bytes:
@@ -158,7 +209,7 @@ async def _get_audio(text: str, voice: str, rate: str, volume: str, pitch: str) 
                     await asyncio.sleep(0.3 * (attempt + 1))
             _save_to_disk(key, audio_data)
 
-        _audio_cache[key] = audio_data
+        _remember_edge_audio(key, audio_data)
         _cache_locks.pop(key, None)
 
     return audio_data
@@ -236,8 +287,8 @@ class ZeroTTSSynthesisRequest(BaseModel):
     audio_temperature: float = Field(default=0.8, gt=0.0, le=2.0)
     audio_repetition_penalty: float = Field(default=1.2, ge=1.0, le=2.0)
     max_chunk_sec: float = Field(
-        default=15.0, ge=1.0, le=30.0, deprecated=True,
-        description="Ignored: ZeroTTS now synthesizes the entire text in one call",
+        default=15.0, ge=1.0, le=30.0,
+        description="Estimated maximum seconds per sentence chunk; actual duration may vary",
     )
     max_frames: int = Field(default=1500, ge=4, le=1500)
     eoa_extra_frames: int = Field(default=1, ge=1, le=12)
@@ -257,6 +308,10 @@ async def _synthesize_tts_response(
     """Route a unified /tts request to Edge TTS, V-TTS, or ZeroTTS."""
     if not text.strip():
         raise HTTPException(status_code=400, detail="text must not be empty")
+    voiceid = _effective_voice_id(voiceid)
+    if FORCE_VOICE_ID and provider and provider.strip().lower() == "edge":
+        # Edge cannot use registered IDs; preserve explicit ZeroTTS/V-TTS routing.
+        provider = None
     selected_provider = provider.strip().lower() if provider else None
     if selected_provider not in {None, "edge", "vtts", "zerotts"}:
         raise HTTPException(
@@ -336,7 +391,7 @@ async def _synthesize_tts_response(
 @app.post("/tts")
 async def text_to_speech(req: TTSRequest):
     """Unified JSON endpoint for Edge TTS, V-TTS, and ZeroTTS."""
-    if req.voiceid and req.voice_id and req.voiceid != req.voice_id:
+    if not FORCE_VOICE_ID and req.voiceid and req.voice_id and req.voiceid != req.voice_id:
         raise HTTPException(status_code=400, detail="voiceid and voice_id must match")
     return await _synthesize_tts_response(
         text=req.text,
@@ -454,12 +509,13 @@ async def synthesize_registered_vtts_voice(req: VTTSSynthesisRequest):
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="text must not be empty")
+    voice_id = _effective_voice_id(req.voice_id)
     try:
         async with _vtts_inference_lock:
             audio = await asyncio.to_thread(
                 vtts_backend.synthesize_registered_voice,
                 text,
-                req.voice_id,
+                voice_id,
                 length_scale=req.length_scale,
                 noise_scale=req.noise_scale,
                 noise_scale_w=req.noise_scale_w,
@@ -485,15 +541,17 @@ async def synthesize_zerotts_voice(req: ZeroTTSSynthesisRequest):
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="text must not be empty")
+    voice_id = _effective_voice_id(req.voice_id)
     try:
         async with _zerotts_inference_lock:
             audio = await asyncio.to_thread(
                 zerotts_backend.synthesize_wav,
                 text,
-                req.voice_id,
+                voice_id,
                 cfg_scale=req.cfg_scale,
                 audio_temperature=req.audio_temperature,
                 audio_repetition_penalty=req.audio_repetition_penalty,
+                max_chunk_sec=req.max_chunk_sec,
                 max_frames=req.max_frames,
                 eoa_extra_frames=req.eoa_extra_frames,
             )

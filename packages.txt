@@ -1,0 +1,4 @@
+build-essential
+ffmpeg
+libsndfile1
+espeak-ng

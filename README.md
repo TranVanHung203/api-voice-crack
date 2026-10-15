@@ -1,4 +1,21 @@
+---
+title: Vietnamese TTS API
+emoji: 🎙️
+colorFrom: yellow
+colorTo: blue
+sdk: gradio
+sdk_version: 5.49.1
+python_version: 3.10.13
+app_file: hf_app.py
+base_path: /
+preload_from_hub:
+  - zeroweight-ai/ZeroTTS
+---
+
 # edge-tts
+
+For deployment to a free Hugging Face Gradio/ZeroGPU Space, see
+[DEPLOY_HUGGINGFACE.md](DEPLOY_HUGGINGFACE.md).
 
 `edge-tts` is a Python module that allows you to use Microsoft Edge's online text-to-speech service from within your Python code or using the provided `edge-tts` or `edge-playback` command.
 
@@ -84,6 +101,23 @@ Install the server dependencies and start it from the repository root:
 pip install -r requirements.txt
 uvicorn server:app --host 0.0.0.0 --port 8000
 ```
+
+To force a server-owned voice ID, edit these settings near the top of `server.py`
+and restart the server:
+
+```python
+FORCE_VOICE_ID = True
+FIXED_VOICE_ID = "your-installed-voice-id"
+```
+
+When enabled, GET/POST `/tts`, `/vtts/synthesize`, and `/zerotts/synthesize`
+ignore the client voice ID. `/tts` preserves explicit ZeroTTS/V-TTS provider
+selection; use `provider=zerotts` for model voices such as `hamy` or `maichi`.
+An Edge provider override is cleared to allow routing by the fixed ID.
+Automatic routing selects ZeroTTS for a locally installed pack, otherwise V-TTS. The dedicated synthesis
+routes retain their respective backends. An empty fixed ID returns HTTP 503.
+Set `FORCE_VOICE_ID = False` (the default) to accept client voice IDs again.
+Voice registration and reference-audio cloning keep their existing behavior.
 
 Register a voice once by sending its reference recording to `POST
 /vtts/voices`:
@@ -194,8 +228,8 @@ For clients that only have a `voice` field, putting the installed ZeroTTS ID in
 that field is auto-detected too. Existing Edge TTS JSON requests remain
 unchanged.
 
-The server uses the upstream ZeroTTS synthesis defaults, including
-`audio_temperature=0.8` and one trailing codec frame (`eoa_extra_frames=1`).
+The server uses `audio_temperature=0.8` and retains one trailing codec
+frame (`eoa_extra_frames=1`).
 You can override `eoa_extra_frames` from `1` to `12` in JSON or as a GET query
 parameter.
 
@@ -205,14 +239,32 @@ Sampling uses the configured fixed seed (the `_SAMPLING_SEED` constant in
 `zerotts_backend.py`) to repeat readings for the same inputs and runtime.
 Sampling defaults are `cfg_scale=1.0` (Voice Similarity),
 `audio_temperature=0.8` and `audio_repetition_penalty=1.2`.
-The backend normalizes Vietnamese text and punctuation, then sends the entire
-text to the model in a single synthesis call, without splitting or adding pauses.
-`max_chunk_sec` is retained as an ignored compatibility parameter.
-`max_frames=1500` remains the generation limit for the whole request, so very
-long text can reach that limit. A single call removes segment boundaries but
-does not guarantee a consistent dialect from the model.
-`POST /zerotts/synthesize` accepts overrides for the sampling settings.
-The cache version was updated so previously segmented audio is not reused.
+The backend normalizes Vietnamese text and punctuation, then generates each
+sentence separately using the same voice and sampling settings. Long sentences
+are split further at commas or word boundaries using ZeroTTS's chunker.
+`max_chunk_sec=15` estimates the chunk size at 15 characters per second; actual
+speech duration varies. Chunks are joined with 200 ms of added silence, without
+changing speech speed or pitch. The fixed seed initializes sampling once per
+request, with the random sequence continuing across chunks.
+`max_frames=1500` limits each chunk. Chunking reduces the amount of text the
+model must generate at once, but cannot guarantee complete words or a consistent
+dialect from the model.
+To change the minimum frames per chunk, edit `_MIN_FRAMES = 4` near the top of
+`zerotts_backend.py` and restart the server. This value is included in the cache
+key, so changing it generates new audio.
+Text-token sampling temperature is controlled by `_TEXT_TEMPERATURE = 1.0`
+in the same file. Restart the server after changing it; this also changes the
+audio cache key.
+`POST /zerotts/synthesize` accepts overrides for sampling and `max_chunk_sec`.
+Both `/tts` routes use the default 15-second estimate automatically.
+The cache version was updated so previous whole-text audio is not reused.
+For a near-silent gap of 160-800 ms just before short final speech, the backend
+keeps both gap edges and reduces the gap to 80 ms within each chunk. Speech samples are preserved;
+earlier pauses, trailing silence and explicit punctuation in the last three
+words are left unchanged. `_TAIL_PAUSE_MS` in `zerotts_backend.py` controls
+this correction; set it to `0` to disable it. This is a conservative waveform
+heuristic and does not identify words. Cache keys include the correction setting,
+so changing it regenerates audio rather than returning an older cached result.
 
 ZeroTTS caches generated WAV audio under `models/zerotts/audio_cache` (or
 `ZEROTTS_DATA_DIR/audio_cache`). Both `/tts` and `/zerotts/synthesize` reuse

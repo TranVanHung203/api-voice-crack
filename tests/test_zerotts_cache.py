@@ -54,19 +54,24 @@ def test_generation_settings_invalidate_cache(backend, monkeypatch, change):
     assert len(calls) == 2
 
 
-def test_legacy_chunk_setting_does_not_change_audio_cache(backend, monkeypatch):
+def test_chunk_setting_invalidates_audio_cache(backend, monkeypatch):
     calls = []
     wav = backend._encode_wav(np.zeros(4800), 48_000)
     monkeypatch.setattr(backend, "_synthesize_uncached", lambda *a, **k: calls.append(k) or wav)
     backend.synthesize_wav("Xin chao", "hamy", max_chunk_sec=1)
     backend.synthesize_wav("Xin chao", "hamy", max_chunk_sec=15)
-    assert len(calls) == 1
+    assert len(calls) == 2
+    assert [options["max_chunk_sec"] for options in calls] == [1.0, 15.0]
 
 
-def test_seed_and_voice_changes_invalidate_cache(backend, monkeypatch):
+def test_sampling_constants_and_voice_changes_invalidate_cache(backend, monkeypatch):
     calls = []
     wav = backend._encode_wav(np.zeros(4800), 48_000)
     monkeypatch.setattr(backend, "_synthesize_uncached", lambda *a, **k: calls.append(k) or wav)
+    backend.synthesize_wav("Xin chao", "hamy")
+    monkeypatch.setattr(module, "_MIN_FRAMES", module._MIN_FRAMES + 1)
+    backend.synthesize_wav("Xin chao", "hamy")
+    monkeypatch.setattr(module, "_TEXT_TEMPERATURE", 0.7)
     backend.synthesize_wav("Xin chao", "hamy")
     monkeypatch.setattr(module, "_SAMPLING_SEED", module._SAMPLING_SEED + 1)
     backend.synthesize_wav("Xin chao", "hamy")
@@ -74,7 +79,7 @@ def test_seed_and_voice_changes_invalidate_cache(backend, monkeypatch):
     voice_dir.mkdir(parents=True)
     (voice_dir / "voice.npz").write_bytes(b"new voice")
     backend.synthesize_wav("Xin chao", "hamy")
-    assert len(calls) == 3
+    assert len(calls) == 5
 
 
 def test_concurrent_identical_requests_generate_once(backend, monkeypatch):
