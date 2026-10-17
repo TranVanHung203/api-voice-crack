@@ -1,0 +1,4 @@
+# Optional CPU-only recognition/alignment for the hidden-continuation workaround.
+faster-whisper==1.2.1
+transformers==4.49.0
+torch>=2.4

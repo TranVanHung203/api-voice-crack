@@ -11,9 +11,9 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     "Dockerfile", ".dockerignore", "README.md", "requirements.txt", "LICENSE", "gpl-3.0.txt",
-    "server.py", "zerotts_backend.py", "vtts_backend.py",
+    "server.py", "zerotts_backend.py", "zerotts_suffix.py", "tts_delivery.py", "vtts_backend.py",
     "DEPLOY_HUGGINGFACE.md",
-    "hf_app.py", "requirements-gradio.txt", "packages.txt",
+    "hf_app.py", "requirements-gradio.txt", "requirements-hidden-suffix.txt", "packages.txt",
 )
 
 
@@ -31,7 +31,14 @@ def deployment_payload(files: list[Path], sdk: str) -> dict[str, bytes]:
     payload = {p.relative_to(ROOT).as_posix(): p.read_bytes() for p in files}
     if sdk == "gradio":
         payload.pop("Dockerfile")
-        payload["requirements.txt"] = (ROOT / "requirements-gradio.txt").read_bytes()
+        # The Gradio builder mounts only this file at /tmp/requirements.txt
+        # during dependency installation; sibling -r includes are unavailable.
+        requirements = (ROOT / "requirements-gradio.txt").read_text(encoding="utf-8")
+        suffix_requirements = (ROOT / "requirements-hidden-suffix.txt").read_text(encoding="utf-8")
+        requirements = requirements.replace("-r requirements-hidden-suffix.txt", suffix_requirements.strip())
+        if any(line.strip().startswith(("-r ", "--requirement ")) for line in requirements.splitlines()):
+            raise ValueError("Gradio deployment requirements must not reference sibling files")
+        payload["requirements.txt"] = requirements.encode("utf-8")
     else:
         readme = payload["README.md"].decode("utf-8")
         body = readme.split("---", 2)[2]

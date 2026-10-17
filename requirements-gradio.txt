@@ -1,10 +1,17 @@
 edge-tts
+# Required by the vendored Edge client and API, even when imported from src/.
+aiohttp>=3.8.0,<4.0.0
+certifi>=2023.11.17
+tabulate>=0.4.4,<1.0.0
+typing-extensions>=4.1.0,<5.0.0
 fastapi>=0.100.0
 uvicorn>=0.23.0
 pydantic>=2.0.0
 python-multipart>=0.0.9
+av>=11
 v-tts @ https://github.com/tronghieuit/v-tts/archive/e22eef3267869375e40a096b376cde94aa41e610.zip
 zerotts==0.1.5
+-r requirements-hidden-suffix.txt
 gradio==5.49.1
 spaces
 torch==2.8.0

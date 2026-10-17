@@ -15,6 +15,8 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+from zerotts_suffix import HiddenSuffixConfig, WhisperSuffixDetector, cut_at_boundary
+
 
 _PROJECT_DIR = Path(__file__).resolve().parent
 _DEFAULT_DATA_DIR = _PROJECT_DIR / "models" / "zerotts"
@@ -22,7 +24,7 @@ _DEFAULT_BUNDLED_VOICES_DIR = _PROJECT_DIR / "voice_packs" / "zerotts"
 _DEFAULT_MODEL_ID = "zeroweight-ai/ZeroTTS"
 _VOICE_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
 _SAMPLING_LOCK = threading.Lock()
-_SAMPLING_SEED = 21031999
+_SAMPLING_SEED = 23011110
 # Minimum generated frames per chunk. Restart the server after changing this.
 _MIN_FRAMES = 4
 # Text-token sampling temperature. Restart the server after changing this.
@@ -30,6 +32,18 @@ _TEXT_TEMPERATURE = 1.0
 _TAIL_PAUSE_MS = 80
 _CHUNK_SILENCE_SEC = 0.2
 _AUDIO_RAM_MAX_BYTES = 64 * 1024 * 1024
+_NUMBER_WORD_PATTERN = r"(?:không|một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười)"
+_STANDALONE_NUMBERS = re.compile(
+    rf"\s*{_NUMBER_WORD_PATTERN}(?:\s*[,;]\s*{_NUMBER_WORD_PATTERN})*\s*[.!?]?\s*",
+    re.IGNORECASE,
+)
+
+
+def _capitalize_standalone_numbers(text: str) -> str:
+    """Capitalize isolated Vietnamese numbers and lists used as TTS prompts."""
+    if not _STANDALONE_NUMBERS.fullmatch(text):
+        return text
+    return re.sub(_NUMBER_WORD_PATTERN, lambda match: match.group().capitalize(), text, flags=re.IGNORECASE)
 
 
 class ZeroTTSBackendError(RuntimeError):
@@ -50,8 +64,12 @@ class ZeroTTSBackend:
     def __init__(self) -> None:
         self._engine: Any | None = None
         self._audio_lock = threading.Lock()
+        self._cache_lock = threading.Lock()
         self._audio_cache: OrderedDict[Path, bytes] = OrderedDict()
         self._audio_cache_bytes = 0
+        self._suffix_detector: WhisperSuffixDetector | None = None
+        self._suffix_trace_hook = None
+        self._suffix_fallback_used = False
 
     @property
     def is_loaded(self) -> bool:
@@ -319,12 +337,12 @@ class ZeroTTSBackend:
             except OSError:
                 continue
         payload = {
-            "version": 4, "text": text, "voice_id": voice_id,
+            "version": 5, "text": text, "voice_id": voice_id,
             "chunk_silence_sec": _CHUNK_SILENCE_SEC,
             "min_frames": _MIN_FRAMES,
             "text_temperature": _TEXT_TEMPERATURE,
             "tail_pause_ms": _TAIL_PAUSE_MS,
-            "seed": _SAMPLING_SEED, "options": options, "files": fingerprints,
+            "seed": options.get("seed", _SAMPLING_SEED), "options": options, "files": fingerprints,
             "model": os.getenv("ZEROTTS_MODEL_ID", _DEFAULT_MODEL_ID),
             "model_dir": configured_dir,
             "revision": os.getenv("ZEROTTS_REVISION"),
@@ -334,16 +352,93 @@ class ZeroTTSBackend:
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
     def _remember_audio(self, path: Path, audio: bytes) -> None:
-        old = self._audio_cache.pop(path, None)
-        if old is not None:
-            self._audio_cache_bytes -= len(old)
-        if len(audio) > _AUDIO_RAM_MAX_BYTES:
-            return
-        self._audio_cache[path] = audio
-        self._audio_cache_bytes += len(audio)
-        while self._audio_cache_bytes > _AUDIO_RAM_MAX_BYTES:
-            _, evicted = self._audio_cache.popitem(last=False)
-            self._audio_cache_bytes -= len(evicted)
+        with self._cache_lock:
+            old = self._audio_cache.pop(path, None)
+            if old is not None:
+                self._audio_cache_bytes -= len(old)
+            if len(audio) > _AUDIO_RAM_MAX_BYTES:
+                return
+            self._audio_cache[path] = audio
+            self._audio_cache_bytes += len(audio)
+            while self._audio_cache_bytes > _AUDIO_RAM_MAX_BYTES:
+                _, evicted = self._audio_cache.popitem(last=False)
+                self._audio_cache_bytes -= len(evicted)
+
+    def _read_cached_audio(self, path: Path) -> bytes | None:
+        """Read complete cached files without waiting for model inference."""
+        with self._cache_lock:
+            audio = self._audio_cache.get(path)
+            if audio is not None:
+                self._audio_cache.move_to_end(path)
+                return audio
+        try:
+            audio = path.read_bytes()
+        except OSError:
+            return None
+        if len(audio) > 44 and audio[:4] == b"RIFF" and audio[8:12] == b"WAVE":
+            self._remember_audio(path, audio)
+            return audio
+        return None
+
+    def _synthesize_segment(self, engine, segment: str, options: dict, config: HiddenSuffixConfig):
+        """Append only after chunking; cut before any other waveform processing."""
+        if not config.enabled:
+            return engine.synthesize(segment, **options), False
+
+        import numpy as np
+
+        model_text = config.model_text(segment)
+        if config.debug:
+            print(f"[TTS] Original text: {segment}", flush=True)
+            print(f"[TTS] Model text: {model_text}", flush=True)
+        checkpoint = np.random.get_state()
+        before = engine.synthesize(model_text, **options)
+        after_generation = np.random.get_state()
+        report = {"original_text": segment, "model_text": model_text,
+                  "sample_rate": engine.sample_rate, "status": "fallback"}
+        try:
+            if not config.suffix.strip():
+                raise ValueError("The hidden suffix must not be empty")
+            if self._suffix_detector is None or self._suffix_detector.model_name != config.asr_model:
+                self._suffix_detector = WhisperSuffixDetector(config.asr_model)
+            boundary = self._suffix_detector.detect(before, engine.sample_rate, segment, config)
+            diagnostic = getattr(self._suffix_detector, "last_diagnostic", {})
+            report["detection"] = diagnostic
+            if config.debug:
+                print("[TTS] Validation: suffix only (original-text matching disabled)", flush=True)
+                if diagnostic.get("recognized_text"):
+                    print(f"[TTS] ASR text: {diagnostic['recognized_text']}", flush=True)
+            audio, metadata = cut_at_boundary(before, engine.sample_rate, boundary, config)
+            report.update(metadata, status="trimmed")
+            if config.debug:
+                print(f"[TTS] Suffix detected at: {metadata['suffix_start']:.3f}s", flush=True)
+                print(f"[TTS] Final cut point: {metadata['cut_point']:.3f}s", flush=True)
+                print(f"[TTS] Original duration: {metadata['before_duration']:.3f}s", flush=True)
+                print(f"[TTS] Final duration: {metadata['after_duration']:.3f}s", flush=True)
+            success = True
+        except Exception as exc:
+            self._suffix_fallback_used = True
+            report["reason"] = str(exc)
+            if self._suffix_detector is not None:
+                report["detection"] = getattr(self._suffix_detector, "last_diagnostic", {})
+            if config.debug and report.get("detection", {}).get("recognized_text"):
+                print(f"[TTS] ASR text: {report['detection']['recognized_text']}", flush=True)
+            logging.getLogger(__name__).warning("[TTS] Hidden suffix failed; using original-text flow: %s", exc)
+            # Repeat the legacy generation from its original RNG checkpoint.
+            # Never return augmented speech when its suffix could not be removed.
+            np.random.set_state(checkpoint)
+            audio = engine.synthesize(segment, **options)
+            after_generation = np.random.get_state()
+            success = False
+        finally:
+            # Loading/running ASR must not perturb subsequent TTS segments.
+            np.random.set_state(after_generation)
+        if self._suffix_trace_hook is not None:
+            try:
+                self._suffix_trace_hook(report, before, audio)
+            except Exception:
+                logging.getLogger(__name__).exception("Could not write hidden-suffix diagnostic artifacts")
+        return audio, success
 
     def synthesize_wav(
         self,
@@ -356,6 +451,7 @@ class ZeroTTSBackend:
         max_chunk_sec: float = 15.0,
         max_frames: int = 1500,
         eoa_extra_frames: int = 1,
+        seed: int | None = None,
     ) -> bytes:
         """Reuse identical audio from RAM or disk before loading the model."""
         text = text.strip()
@@ -367,21 +463,30 @@ class ZeroTTSBackend:
             "max_frames": int(max_frames),
             "eoa_extra_frames": int(eoa_extra_frames),
         }
-        # Also prevents duplicate work for simultaneous identical requests.
+        if seed is not None:
+            if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed <= 4294967295:
+                raise ValueError("seed must be an integer from 0 to 4294967295")
+            options["seed"] = seed
+        suffix_config = HiddenSuffixConfig.from_env()
+        if suffix_config.enabled:
+            options["hidden_suffix_config"] = suffix_config.cache_options()
+        cache_dir = self._audio_cache_dir()
+        path = cache_dir / f"{self._audio_cache_key(text, voice_id, options)}.wav"
+        audio = self._read_cached_audio(path)
+        if audio is not None:
+            return audio
+        # Only misses wait for inference. Recheck after waiting: another request
+        # may have generated the audio or downloaded the model fingerprint.
         with self._audio_lock:
-            cache_dir = self._audio_cache_dir()
             path = cache_dir / f"{self._audio_cache_key(text, voice_id, options)}.wav"
-            if path in self._audio_cache:
-                self._audio_cache.move_to_end(path)
-                return self._audio_cache[path]
-            try:
-                audio = path.read_bytes()
-                if len(audio) > 44 and audio[:4] == b"RIFF" and audio[8:12] == b"WAVE":
-                    self._remember_audio(path, audio)
-                    return audio
-            except OSError:
-                pass
+            audio = self._read_cached_audio(path)
+            if audio is not None:
+                return audio
             audio = self._synthesize_uncached(text, voice_id, **options)
+            if suffix_config.enabled and self._suffix_fallback_used:
+                # A transient recognition/dependency failure must not pin a
+                # legacy fallback into the workaround's success cache.
+                return audio
             if len(audio) <= 44:
                 return audio
             # First model download can change the fingerprint during synthesis.
@@ -412,9 +517,16 @@ class ZeroTTSBackend:
         max_chunk_sec: float = 15.0,
         max_frames: int = 1500,
         eoa_extra_frames: int = 1,
+        seed: int | None = None,
+        hidden_suffix_config: dict | None = None,
     ) -> bytes:
         """Generate bounded sentence chunks and join them into one WAV."""
         voice_id = self._validate_voice_id(voice_id)
+        suffix_config = (
+            HiddenSuffixConfig.from_cache_options(hidden_suffix_config)
+            if hidden_suffix_config is not None else HiddenSuffixConfig.from_env()
+        )
+        self._suffix_fallback_used = False
         engine = self._load_engine()
         try:
             import numpy as np
@@ -427,7 +539,7 @@ class ZeroTTSBackend:
             )
             from zerotts.text_norm import normalize_vi_text
 
-            normalized = normalize_punctuation(normalize_vi_text(text))
+            normalized = _capitalize_standalone_numbers(normalize_punctuation(normalize_vi_text(text)))
             segments = [
                 cleaned
                 for sentence in split_sentences(normalized)
@@ -440,22 +552,23 @@ class ZeroTTSBackend:
             with _SAMPLING_LOCK:
                 previous_state = np.random.get_state()
                 try:
-                    np.random.seed(_SAMPLING_SEED)
+                    np.random.seed(_SAMPLING_SEED if seed is None else seed)
                     for segment in segments:
-                        audio = engine.synthesize(
-                            segment,
-                            voice=voice_id,
-                            cfg_scale=cfg_scale,
-                            text_temperature=_TEXT_TEMPERATURE,
-                            audio_temperature=audio_temperature,
-                            audio_repetition_penalty=audio_repetition_penalty,
-                            min_frames=_MIN_FRAMES,
-                            max_frames=max_frames,
-                            eoa_extra_frames=eoa_extra_frames,
+                        audio, suffix_trimmed = self._synthesize_segment(
+                            engine, segment, dict(
+                                voice=voice_id,
+                                cfg_scale=cfg_scale,
+                                text_temperature=_TEXT_TEMPERATURE,
+                                audio_temperature=audio_temperature,
+                                audio_repetition_penalty=audio_repetition_penalty,
+                                min_frames=_MIN_FRAMES,
+                                max_frames=max_frames,
+                                eoa_extra_frames=eoa_extra_frames,
+                            ), suffix_config,
                         )
                         # Preserve explicit punctuation pauses within each chunk.
                         last_words = " ".join(segment.rstrip(".!?").split()[-3:])
-                        if not re.search(r"[,;:.!?]", last_words):
+                        if not suffix_trimmed and not re.search(r"[,;:.!?]", last_words):
                             audio = self._shorten_tail_pause(
                                 audio, engine.sample_rate, _TAIL_PAUSE_MS
                             )

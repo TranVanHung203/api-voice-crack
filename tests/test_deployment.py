@@ -40,3 +40,18 @@ def test_startup_loads_only_cache_files_that_fit(monkeypatch, tmp_path):
     (tmp_path / "new.mp3").write_bytes(b"new-audio")
     server._load_disk_cache()
     assert sum(map(len, server._audio_cache.values())) <= 10
+
+
+def test_gradio_builder_receives_self_contained_dependencies():
+    from packaging.requirements import Requirement
+    from tools.deploy_huggingface import deployment_files, deployment_payload
+
+    payload = deployment_payload(deployment_files(), "gradio")
+    lines = payload["requirements.txt"].decode("utf-8").splitlines()
+    dependencies = [line.strip() for line in lines if line.strip() and not line.lstrip().startswith("#")]
+    assert not any(line.startswith(("-r ", "--requirement ")) for line in dependencies)
+    names = {Requirement(line).name for line in dependencies}
+    assert {"aiohttp", "tabulate", "faster-whisper", "transformers", "torch"} <= names
+    assert "zerotts_suffix.py" in payload
+    assert "tts_delivery.py" in payload
+    assert "ffmpeg" in payload["packages.txt"].decode("utf-8").splitlines()

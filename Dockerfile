@@ -19,13 +19,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && mkdir -p /app && chown appuser:appuser /app
 
 WORKDIR /app
-COPY requirements.txt ./
+COPY requirements.txt requirements-hidden-suffix.txt ./
 # Avoid downloading CUDA packages for a CPU Space.
 RUN pip install --upgrade pip \
     && pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu \
     && pip install -r requirements.txt
 
-COPY --chown=appuser:appuser server.py zerotts_backend.py vtts_backend.py README.md LICENSE ./
+COPY --chown=appuser:appuser server.py zerotts_backend.py zerotts_suffix.py tts_delivery.py vtts_backend.py README.md LICENSE ./
 COPY --chown=appuser:appuser src ./src
 COPY --chown=appuser:appuser voice_packs ./voice_packs
 USER appuser

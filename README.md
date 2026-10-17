@@ -233,8 +233,192 @@ frame (`eoa_extra_frames=1`).
 You can override `eoa_extra_frames` from `1` to `12` in JSON or as a GET query
 parameter.
 
+If a particular sentence sounds incomplete, generate another reading with the
+optional `seed` parameter (an integer from 0 to 4294967295). It is supported by
+GET/POST `/tts` and POST `/zerotts/synthesize` for ZeroTTS:
+
+```json
+{"text":"Trong bể có bao nhiêu con cá?","voiceid":"VpYLlCQEgcoHgycJstNP","provider":"zerotts","seed":7}
+```
+
+Omitting `seed` retains the existing server seed and cached output. Each explicit
+seed has its own cache entry. The same text, voice, settings, and seed reproduce
+the same reading on the same runtime; changing seed can improve one sentence
+and worsen another. Listen to the result before selecting it. This does not
+increase `min_frames`, change the text, or force extra speech after EOA.
+
+For an offline comparison of the reported endings, run:
+
+```powershell
+py -3.11 tools/probe_zerotts_endings.py --voices VpYLlCQEgcoHgycJstNP --sentences kham_pha con_ca --variants baseline seed1 seed7 seed42 --output models/zerotts/ending-review
+```
+
+The script writes raw WAVs and a JSON report without changing the installed
+ZeroTTS package or API configuration. It also supports diagnostic `tail4`,
+`debounce3`, `control02`, `cfg13`, `cfg15`, `temp06`, and `repeat11` variants.
+Debounce is experimental and can repeat words; it is not enabled in the API.
+`tools/transcribe_ending_probe.py` optionally transcribes these WAVs using an
+existing local faster-whisper installation and model. Recognition alone does
+not establish that a final syllable sounds natural or complete.
+
 ZeroTTS returns the original synthesized audio without speed adjustment;
 `rate` applies only to Edge TTS.
+
+### Smaller downloads and device caching
+
+For ZeroTTS, add `format=mp3` to GET `/tts`, or `"format":"mp3"` to either
+JSON synthesis endpoint. Omitting it retains WAV output. Edge/V-TTS routing
+keeps its existing formats; the new format option is specific to ZeroTTS.
+
+```bash
+curl "http://127.0.0.1:8000/tts?text=Xin%20chao&voiceid=VpYLlCQEgcoHgycJstNP&provider=zerotts&format=mp3" --output speech.mp3
+```
+
+MP3 is mono at 64 kbps and uses lossy compression after suffix trimming.
+Generation settings, voice data, and the original WAV stay unchanged. A measured
+5.22-second sample shrank from 501,088 to 42,284 bytes; decoding the MP3 retained
+all 250,522 source samples at 48 kHz. PyAV encodes in process and is included
+in both requirements profiles; FFmpeg remains a fallback. Encoded output is
+cached by the exact WAV content and encoding profile, with a bounded RAM cache
+and disk files alongside the WAV cache.
+
+GET/HEAD ZeroTTS responses include an ETag and `Cache-Control: private, no-cache`.
+Devices may store the audio, but revalidate the URL before reuse. A matching
+`If-None-Match` returns HTTP 304 without transferring the audio again. This
+policy also detects new audio after a voice, seed, or backend setting changes
+without relying on the caller to rename the URL. POST responses remain
+`no-store`. GET byte ranges return 206, and HEAD provides length/ETag without
+an audio body. CORS exposes the relevant headers.
+
+ZeroTTS cache hits now bypass the inference lock; misses remain serialized and
+simultaneous identical requests still generate once. The first uncached phrase
+still needs TTS/alignment, and its first MP3 request also performs encoding.
+For Flutter mobile, an HTTP audio player may need an explicit local file cache
+to reuse downloads; the smaller MP3 response helps even without that cache.
+
+### Optional hidden continuation
+
+For local Windows use, `start_server.vbs` launches `start_server.ps1`, which
+selects `.venv-rvc`, enables hidden continuation, and reuses downloaded diagnostic
+models. Stop an existing server before launching it. Run
+`powershell -NoProfile -File .\start_server.ps1 -CheckOnly` to inspect its Python
+environment and settings, or pass `-DisableHiddenSuffix` to use the old flow.
+Direct uvicorn/Hugging Face startup still uses the backend's opt-in configuration.
+
+This experimental backend option uses `.Bắt đầu thôi.` **after chunking**.
+Its leading period replaces the normalized segment's terminal punctuation in
+the internal model text. For example, the model
+receives `Trong bể có bao nhiêu con cá.Bắt đầu thôi.` without any intervening space. API input, displayed text,
+and the original text used by the audio cache remain unchanged.
+
+For isolated `Không` (including numeric input `0`), `Ba`, and `Năm` segments,
+the default suffix uses a comma pause: `Không, Bắt đầu thôi.`,
+`Ba, Bắt đầu thôi.` / `Năm, Bắt đầu thôi.`. This gives these short words a
+phrase boundary before the continuation instead of shortening their ending.
+The exception is applied after chunking and only with the default suffix;
+counting lists, longer sentences, custom suffixes, and disabled mode keep their
+existing behavior. The API/display text stays unchanged. The cache version
+includes this rule so old audio for these words is not reused.
+
+The period separates the original text from the hidden words.
+They stay in the same model call as the original speech. ZeroTTS has no timed
+pause argument here, so the pause duration depends on the generated waveform;
+repeated spaces or newlines alone cannot enforce a pause. Alignment still
+uses only the spoken words, and trimming uses the detected suffix boundary.
+
+The end of the ASR word immediately before the suffix is protected from
+cutting and fading, regardless of its spelling. This also protects the spoken
+vowel of a single-letter label such as `B`, whose CTC character may occupy
+only one emission frame. An overlapping or unusable cut boundary still uses
+the old flow.
+
+The option is **off by default**. Install its dependencies in the same Python
+environment as the server:
+
+```powershell
+py -3.11 -m pip install -r requirements-hidden-suffix.txt
+$env:ZEROTTS_ENABLE_HIDDEN_SUFFIX = "1"
+$env:ZEROTTS_HIDDEN_SUFFIX = ".Bắt đầu thôi."
+$env:ZEROTTS_SUFFIX_DEBUG = "1"
+```
+
+`ZEROTTS_SUFFIX_DEBUG=0` disables successful-request debug logs. Detection
+failures still generate a warning. Set `ZEROTTS_ENABLE_HIDDEN_SUFFIX=0` and
+restart the server to use the existing path without continuation or ASR.
+
+Optional model selectors:
+
+- `ZEROTTS_SUFFIX_ASR_MODEL`: faster-whisper model name or existing directory;
+  default `small`, on CPU with int8 inference.
+- `ZEROTTS_SUFFIX_ALIGN_MODEL`: a compatible Vietnamese character CTC model
+  name or existing directory; default
+  `nguyenvulebinh/wav2vec2-base-vietnamese-250h`.
+
+Whisper confirms that the entire suffix occurs at the end of the spoken audio.
+**The original speech is not compared with the request text.** For example,
+Whisper hearing `Hãy đùa giấu lớn nhé` instead of `Hãy đồ dấu lớn nhé` does
+not reject the suffix. Independent CTC transcription of the original is also
+not an acceptance condition. This mode locates the hidden suffix; it does not
+validate whether ZeroTTS pronounced every requested word correctly.
+
+The recognized prefix is used only as acoustic context for Vietnamese CTC
+forced alignment, which locates the first character of `Bắt`. ASR integer
+tokens are expanded to spoken Vietnamese words for the alignment transcript.
+If ASR recognizes only the suffix, alignment is restricted to a window starting
+40 ms before its ASR timestamp; it does not force the suffix onto the start of
+the original audio. Suffix recognition confidence, CTC confidence, and agreement
+between the ASR word interval and CTC onset are still required.
+
+This is forced alignment, not an estimate from total WAV duration. Alignment
+uses a temporary 16 kHz copy; output retains the original 48 kHz sample rate
+and WAV PCM 16-bit format. It does not change ZeroTTS weights, voice latents,
+min_frames, EOA behavior, or sampling settings.
+
+The cut starts from 20 ms before the aligned onset. A bounded search prefers
+low-energy points, then snaps to a nearby zero crossing (within 1 ms). The
+complete 15 ms fade-out must fit after the protected preceding word end.
+Missing/uncertain suffix recognition, invalid/low-confidence suffix alignment,
+an unsafe boundary, unavailable dependencies, or audio over 29 seconds uses
+the old original-text flow. A spelling mismatch in the original alone does
+not trigger fallback. The suffix cache version has changed so previous audio
+is not reused with the new detection behavior.
+The backend restores its random-state checkpoint before
+regenerating, and never returns the untrimmed hidden suffix. Fallback results
+are not cached under the workaround settings. Successful cache entries include
+the suffix, model selections, cut settings, and local model fingerprints.
+
+The alignment model used for this experiment is licensed **CC BY-NC 4.0**;
+review its [model card](https://huggingface.co/nguyenvulebinh/wav2vec2-base-vietnamese-250h)
+before commercial use. Loading ASR and alignment models also adds CPU/RAM and
+latency. No recognition models are loaded while the option is disabled.
+
+Generate the five supplied sample sentences in the existing local environment:
+
+```powershell
+.\.venv-rvc\Scripts\python.exe tools/test_hidden_suffix.py --debug
+```
+
+To test a specific sentence, add `--text "một,hai,ba,bốn"` (repeat `--text`
+for multiple sentences) and optionally `--output models/zerotts/hidden-suffix-counting`.
+Use `--suffix ".Bắt đầu thôi."` to explicitly select the period and suffix.
+Suffixes without a leading comma or period are appended verbatim. Results from suffix
+comparisons should use separate output directories.
+
+The test script reuses the existing diagnostic model directories when present;
+otherwise use `--asr-model` and `--alignment-model`, or the environment variables
+above. By default it writes to `models/zerotts/hidden-suffix-test/`:
+
+- `before_cut/`: complete ZeroTTS audio including the hidden suffix.
+- `after_cut/`: cropped segment WAVs plus `01_final.wav` through `05_final.wav`.
+- `legacy/`: original-text-only WAVs with the same seed/settings for comparison.
+- `results.json`: source/model text, status, suffix/cut timestamps, aligned words,
+  and fallback reasons.
+
+`before_cut/` also saves float32 `.npy` samples for exact ASR replay.
+`--reuse-before` prefers these samples when present, otherwise reads the WAV;
+it re-runs detection without regenerating TTS. PCM16 rounding alone may change
+a recognizer's spelling of a short word. All normal runs bypass the audio cache. The optional workflow
+buffers the complete segment and does not add a streaming API.
 Sampling uses the configured fixed seed (the `_SAMPLING_SEED` constant in
 `zerotts_backend.py`) to repeat readings for the same inputs and runtime.
 Sampling defaults are `cfg_scale=1.0` (Voice Similarity),

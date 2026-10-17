@@ -10,11 +10,13 @@ import aiohttp
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, Response, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
+from tts_delivery import AudioEncodingError, audio_response, encode_mp3
 # To run the server, use the following command:
 # uvicorn server:app --host 0.0.0.0 --port 8000
 #
@@ -73,6 +75,9 @@ async def lifespan(_app: FastAPI):
     print(f"  Local (same machine) : http://127.0.0.1:{port}")
     print(f"  LDPlayer / Emulator  : http://10.0.2.2:{port}")
     print(f"  LAN (other devices)  : http://{lan_ip}:{port}")
+    from zerotts_suffix import HiddenSuffixConfig
+    suffix_enabled = HiddenSuffixConfig.from_env().enabled
+    print(f"  ZeroTTS hidden suffix: {'ON' if suffix_enabled else 'OFF'}")
     print("=" * 50 + "\n")
     # Load persisted audio cache from disk.
     _load_disk_cache()
@@ -109,6 +114,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["ETag", "Accept-Ranges", "Content-Range", "Content-Length"],
 )
 
 
@@ -224,17 +230,25 @@ _VTTS_HEADERS = {
     "Content-Disposition": "inline; filename=vtts-cloned.wav",
     "Cache-Control": "no-store",
 }
-_ZEROTTS_HEADERS = {
-    "Content-Disposition": "inline; filename=zerotts.wav",
-    "Cache-Control": "no-store",
-}
 _VTTS_TEMP_DIR = Path(os.getenv("VTTS_TEMP_DIR", "models/vtts/tmp"))
 _VTTS_MAX_REFERENCE_BYTES = int(
     os.getenv("VTTS_MAX_REFERENCE_BYTES", str(25 * 1024 * 1024))
 )
 _VTTS_ALLOWED_SUFFIXES = {".wav", ".mp3", ".flac", ".ogg"}
 _vtts_inference_lock = asyncio.Lock()
-_zerotts_inference_lock = asyncio.Lock()
+# ZeroTTS serializes cache misses in its backend; cached audio bypasses inference.
+
+
+async def _zerotts_audio_response(audio: bytes, format: str, request: Request | None) -> Response:
+    if format == "mp3":
+        try:
+            audio = await asyncio.to_thread(encode_mp3, audio, zerotts_backend._audio_cache_dir())
+        except AudioEncodingError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return audio_response(
+        audio, "audio/mpeg" if format == "mp3" else "audio/wav",
+        f"zerotts.{format}", request,
+    )
 
 
 async def _save_vtts_reference(reference_audio: UploadFile) -> Path:
@@ -266,7 +280,10 @@ class TTSRequest(BaseModel):
     voiceid: str | None = None
     voice_id: str | None = None
     provider: str | None = None
+    format: Literal["wav", "mp3"] | None = None
     eoa_extra_frames: int = Field(default=1, ge=1, le=12)
+    seed: int | None = Field(default=None, ge=0, le=4294967295,
+                             description="ZeroTTS sampling seed; omit to use the server default")
     rate: str = "-25%"
     volume: str = "+100%"
     pitch: str = "+0Hz"
@@ -283,6 +300,7 @@ class VTTSSynthesisRequest(BaseModel):
 class ZeroTTSSynthesisRequest(BaseModel):
     text: str
     voice_id: str
+    format: Literal["wav", "mp3"] = "wav"
     cfg_scale: float = Field(default=1.0, ge=0.0, le=5.0)
     audio_temperature: float = Field(default=0.8, gt=0.0, le=2.0)
     audio_repetition_penalty: float = Field(default=1.2, ge=1.0, le=2.0)
@@ -292,6 +310,8 @@ class ZeroTTSSynthesisRequest(BaseModel):
     )
     max_frames: int = Field(default=1500, ge=4, le=1500)
     eoa_extra_frames: int = Field(default=1, ge=1, le=12)
+    seed: int | None = Field(default=None, ge=0, le=4294967295,
+                             description="ZeroTTS sampling seed; omit to use the server default")
 
 
 async def _synthesize_tts_response(
@@ -304,6 +324,9 @@ async def _synthesize_tts_response(
     volume: str,
     pitch: str,
     eoa_extra_frames: int,
+    seed: int | None = None,
+    format: Literal["wav", "mp3"] | None = None,
+    request: Request | None = None,
 ) -> Response:
     """Route a unified /tts request to Edge TTS, V-TTS, or ZeroTTS."""
     if not text.strip():
@@ -345,20 +368,23 @@ async def _synthesize_tts_response(
     )
     if use_zerotts:
         try:
-            async with _zerotts_inference_lock:
-                audio = await asyncio.to_thread(
-                    zerotts_backend.synthesize_wav,
-                    text.strip(),
-                    resolved_voiceid,
-                    eoa_extra_frames=eoa_extra_frames,
-                )
+            audio = await asyncio.to_thread(
+                zerotts_backend.synthesize_wav,
+                text.strip(),
+                resolved_voiceid,
+                eoa_extra_frames=eoa_extra_frames,
+                **({"seed": seed} if seed is not None else {}),
+            )
         except ZeroTTSVoiceNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ZeroTTSInvalidVoiceIdError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         except ZeroTTSBackendError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
-        return Response(content=audio, media_type="audio/wav", headers=_ZEROTTS_HEADERS)
+        return await _zerotts_audio_response(audio, format or "wav", request)
+
+    if format is not None:
+        raise HTTPException(status_code=400, detail="format is supported only for ZeroTTS")
 
     if resolved_voiceid and selected_provider != "edge":
         try:
@@ -389,7 +415,7 @@ async def _synthesize_tts_response(
 
 
 @app.post("/tts")
-async def text_to_speech(req: TTSRequest):
+async def text_to_speech(req: TTSRequest, request: Request):
     """Unified JSON endpoint for Edge TTS, V-TTS, and ZeroTTS."""
     if not FORCE_VOICE_ID and req.voiceid and req.voice_id and req.voiceid != req.voice_id:
         raise HTTPException(status_code=400, detail="voiceid and voice_id must match")
@@ -402,11 +428,16 @@ async def text_to_speech(req: TTSRequest):
         volume=req.volume,
         pitch=req.pitch,
         eoa_extra_frames=req.eoa_extra_frames,
+        seed=req.seed,
+        format=req.format,
+        request=request,
     )
 
 
+@app.head("/tts", include_in_schema=False)
 @app.get("/tts")
 async def text_to_speech_get(
+    request: Request,
     text: str = Query(description="Text to synthesize"),
     voice: str = Query(default="vi-VN-HoaiMyNeural"),
     voiceid: str | None = Query(
@@ -419,6 +450,9 @@ async def text_to_speech_get(
     volume: str = Query(default="+100%"),
     pitch: str = Query(default="+0Hz"),
     eoa_extra_frames: int = Query(default=1, ge=1, le=12),
+    seed: int | None = Query(default=None, ge=0, le=4294967295,
+                             description="ZeroTTS sampling seed; omit to use the server default"),
+    format: Literal["wav", "mp3"] | None = Query(default=None, description="ZeroTTS output format; default wav"),
 ):
     """Unified query endpoint for Edge TTS, V-TTS, and ZeroTTS."""
     return await _synthesize_tts_response(
@@ -430,6 +464,9 @@ async def text_to_speech_get(
         volume=volume,
         pitch=pitch,
         eoa_extra_frames=eoa_extra_frames,
+        seed=seed,
+        format=format,
+        request=request,
     )
 
 
@@ -536,32 +573,32 @@ async def list_zerotts_voices():
 
 
 @app.post("/zerotts/synthesize")
-async def synthesize_zerotts_voice(req: ZeroTTSSynthesisRequest):
-    """Synthesize a complete PCM WAV using an installed ZeroTTS voice pack."""
+async def synthesize_zerotts_voice(req: ZeroTTSSynthesisRequest, request: Request):
+    """Synthesize a complete WAV or optional MP3 using an installed voice pack."""
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="text must not be empty")
     voice_id = _effective_voice_id(req.voice_id)
     try:
-        async with _zerotts_inference_lock:
-            audio = await asyncio.to_thread(
-                zerotts_backend.synthesize_wav,
-                text,
-                voice_id,
-                cfg_scale=req.cfg_scale,
-                audio_temperature=req.audio_temperature,
-                audio_repetition_penalty=req.audio_repetition_penalty,
-                max_chunk_sec=req.max_chunk_sec,
-                max_frames=req.max_frames,
-                eoa_extra_frames=req.eoa_extra_frames,
-            )
+        audio = await asyncio.to_thread(
+            zerotts_backend.synthesize_wav,
+            text,
+            voice_id,
+            cfg_scale=req.cfg_scale,
+            audio_temperature=req.audio_temperature,
+            audio_repetition_penalty=req.audio_repetition_penalty,
+            max_chunk_sec=req.max_chunk_sec,
+            max_frames=req.max_frames,
+            eoa_extra_frames=req.eoa_extra_frames,
+            **({"seed": req.seed} if req.seed is not None else {}),
+        )
     except ZeroTTSVoiceNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ZeroTTSInvalidVoiceIdError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ZeroTTSBackendError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-    return Response(content=audio, media_type="audio/wav", headers=_ZEROTTS_HEADERS)
+    return await _zerotts_audio_response(audio, req.format, request)
 
 
 @app.get("/voices")

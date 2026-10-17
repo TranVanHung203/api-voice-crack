@@ -39,6 +39,18 @@ Do not upload the ZIP itself as application source.
 
 The remote `requirements.txt` is generated from `requirements-gradio.txt`;
 local requirements and the optional Docker deployment remain separate.
+Both profiles explicitly install `aiohttp`, `certifi`, `tabulate`, and
+`typing-extensions` for the vendored Edge client/API, plus
+the dependencies in `requirements-hidden-suffix.txt` for recognition and alignment.
+The Gradio upload expands that include into a self-contained `requirements.txt`,
+because the Hugging Face dependency-install stage cannot read sibling files.
+Docker retains the local include. The deployment
+package includes that requirements file, `zerotts_suffix.py`, and `tts_delivery.py`; local virtual
+environments are not uploaded.
+Both dependency profiles include PyAV for MP3 delivery. `packages.txt` and the
+Docker image also install FFmpeg as a fallback. Add `format=mp3` to a ZeroTTS
+GET URL for the smaller response. GET/HEAD support ETag validation, byte ranges,
+and private device caching; POST audio remains `no-store`.
 The Space uses Python 3.10.13, Gradio 5.49.1 and PyTorch 2.8.0. ZeroTTS weights
 are preloaded at build time into the default Hugging Face cache; the first TTS
 request still loads ONNX sessions into RAM.
