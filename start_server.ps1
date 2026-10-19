@@ -34,7 +34,7 @@ if (-not $env:ZEROTTS_SUFFIX_ALIGN_MODEL) {
 Write-Host "Python: $ttsPython"
 Write-Host "ZEROTTS_ENABLE_HIDDEN_SUFFIX=$env:ZEROTTS_ENABLE_HIDDEN_SUFFIX"
 if ($CheckOnly) {
-    & $ttsPython -c "import server, faster_whisper, torch, transformers; from zerotts_suffix import HiddenSuffixConfig; c=HiddenSuffixConfig.from_env(); print('API imports OK'); print('Hidden suffix:', c.enabled); print('ASR model:', c.asr_model); print('Alignment model:', c.alignment_model)"
+    & $ttsPython -c "import server, faster_whisper, torch, transformers; from vieneu import Vieneu; from zerotts_suffix import HiddenSuffixConfig; c=HiddenSuffixConfig.from_env(); print('API imports OK (including VieNeu)'); print('Hidden suffix:', c.enabled); print('ASR model:', c.asr_model); print('Alignment model:', c.alignment_model)"
     exit $LASTEXITCODE
 } else {
     & $ttsPython -m uvicorn server:app --host 0.0.0.0 --port 8000

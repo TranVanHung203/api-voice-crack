@@ -166,3 +166,7 @@ cython_debug/
 *.srt
 /.idea/
 /models/
+/vendor/VieNeu-TTS/
+/.tmp_vieneu/
+/.venv-gwen/
+/vendor/gwen-tts/

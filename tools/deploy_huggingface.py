@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     "Dockerfile", ".dockerignore", "README.md", "requirements.txt", "LICENSE", "gpl-3.0.txt",
     "server.py", "zerotts_backend.py", "zerotts_suffix.py", "tts_delivery.py", "vtts_backend.py",
-    "DEPLOY_HUGGINGFACE.md",
+    "DEPLOY_HUGGINGFACE.md", "vieneu_backend.py", "gwen_backend.py", "gwen_worker.py", "requirements-gwen.txt", "setup_gwen.ps1",
     "hf_app.py", "requirements-gradio.txt", "requirements-hidden-suffix.txt", "packages.txt",
 )
 
@@ -21,6 +21,7 @@ def deployment_files() -> list[Path]:
     files = [ROOT / name for name in ROOT_FILES]
     files.extend(p for p in (ROOT / "src").rglob("*") if p.is_file() and p.suffix in {".py", ".typed"})
     files.extend(p for p in (ROOT / "voice_packs").rglob("*") if p.is_file() and p.suffix in {".npz", ".bin", ".json", ".md"})
+    files.extend((ROOT / "voice_packs" / "gwen" / "data" / "ref_audio").glob("*.wav"))
     missing = [str(p) for p in files if not p.is_file()]
     if missing:
         raise FileNotFoundError(f"Missing deployment files: {missing}")

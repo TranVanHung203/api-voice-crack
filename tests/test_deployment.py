@@ -54,4 +54,10 @@ def test_gradio_builder_receives_self_contained_dependencies():
     assert {"aiohttp", "tabulate", "faster-whisper", "transformers", "torch"} <= names
     assert "zerotts_suffix.py" in payload
     assert "tts_delivery.py" in payload
+    assert "vieneu_backend.py" in payload
+    assert "vieneu" in names
+    assert "gwen_backend.py" in payload and "gwen_worker.py" in payload
+    assert "requirements-gwen.txt" in payload
+    assert "voice_packs/gwen/data/ref_audio/yen_nhi.wav" in payload
+    assert "voice_packs/gwen/data/ref_info.json" in payload
     assert "ffmpeg" in payload["packages.txt"].decode("utf-8").splitlines()

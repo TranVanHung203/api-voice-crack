@@ -25,7 +25,7 @@ RUN pip install --upgrade pip \
     && pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu \
     && pip install -r requirements.txt
 
-COPY --chown=appuser:appuser server.py zerotts_backend.py zerotts_suffix.py tts_delivery.py vtts_backend.py README.md LICENSE ./
+COPY --chown=appuser:appuser server.py zerotts_backend.py zerotts_suffix.py tts_delivery.py vtts_backend.py vieneu_backend.py gwen_backend.py gwen_worker.py requirements-gwen.txt README.md LICENSE ./
 COPY --chown=appuser:appuser src ./src
 COPY --chown=appuser:appuser voice_packs ./voice_packs
 USER appuser

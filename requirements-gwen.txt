@@ -1,0 +1,8 @@
+# Install into .venv-gwen, not the main API environment (transformers differs).
+torch==2.8.0
+torchaudio==2.8.0
+qwen-tts==0.1.1
+gradio==5.49.1
+numpy>=1.24,<2
+soundfile>=0.12
+sea-g2p==0.10.0

@@ -1,0 +1,47 @@
+{
+    "yen_nhi": {
+        "name": "Yến Nhi",  
+        "audio_path": "data/ref_audio/yen_nhi.wav",
+        "text": "sao lại không liên quan. các anh lấy vợ rồi các anh cứ đội chị lên đầu làm nóc nhà ấy, suốt ngày hỏi ý kiến các chị thì làm sao mà ra vấn đề được cho em đúng không."
+    },
+    "my_van": {
+        "name": "Mỹ Vân",
+        "audio_path": "data/ref_audio/my_van.wav",
+        "text": "bạn thân mến, chúng ta sẽ đến với một bài tập tiếp theo để giúp cho các bạn có hơi thở dài, sâu và đầy đặn hơn."
+    },
+    "ai_vy": {
+        "name": "Ái Vy",
+        "audio_path": "data/ref_audio/ai_vy.wav",
+        "text": "việt nam đang kiêu hãnh bước vào kỷ nguyên vươn mình rực rỡ với khát vọng mãnh liệt, trí tuệ đổi mới và tinh thần đoàn kết đất nước, tự tin bứt phá, kiến tạo một tương lai thịnh vượng và vươn tầm quốc tế."
+    },
+    "an_nhi": {
+        "name": "An Nhi",
+        "audio_path": "data/ref_audio/an_nhi.wav",
+        "text": "việt nam đang kiêu hãnh bước vào kỷ nguyên vươn mình rực rỡ với khát vọng mãnh liệt, trí tuệ đổi mới và tinh thần đoàn kết đất nước, tự tin bứt phá, kiến tạo một tương lai thịnh vượng và vươn tầm quốc tế."
+    },
+    "dieu_linh": {
+        "name": "Diệu Linh",
+        "audio_path": "data/ref_audio/dieu_linh.wav",
+        "text": "việt nam đang kiêu hãnh bước vào một kỷ nguyên vươn mình rực rỡ với khát vọng mãnh liệt, trí tuệ đổi mới và tinh thần đoàn kết."
+    },
+    "khanh_toan": {
+        "name": "Khánh Toàn",
+        "audio_path": "data/ref_audio/khanh_toan.wav",
+        "text": "việt nam đang kiêu hãnh bước vào kỷ nguyên vươn mình rực rỡ với khát vọng mãnh liệt, trí tuệ đổi mới, tinh thần đoàn kết."
+    },
+    "tran_lam": {
+        "name": "Trần Lâm",
+        "audio_path": "data/ref_audio/tran_lam.wav",
+        "text": "trí tuệ đổi mới và tinh thần đoàn kết, đất nước tự tin bứt phá, kiến tạo một tương lai thịnh vượng và vươn tầm quốc tế."
+    },    
+    "nsnd_ha_phuong": {
+        "name": "NSND Hà Phương",
+        "audio_path": "data/ref_audio/nsnd_ha_phuong.wav",
+        "text": "đây là những lời cuối cùng của típ rót người sáng lập ra ai phôn áp bồ chấn động cả thế giới."
+    },
+    "nsnd_kim_cuc": {
+        "name": "NSND Kim Cúc",
+        "audio_path": "data/ref_audio/nsnd_kim_cuc.wav",
+        "text": "đi họp người ta đả thông mãi rồi. lão dòng tai nghe, rồi lão rủm cả người. lão làm như vô tình kéo ghế xích lại đám đông."
+    }
+}

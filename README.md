@@ -92,6 +92,126 @@ Other projects that use the `edge-tts` module include:
 * [Podcastfy](https://github.com/souzatharsis/podcastfy/blob/main/podcastfy/tts/providers/edge.py)
 * [tts-samples](https://github.com/yaph/tts-samples/blob/main/bin/create_sound_samples.py) - a collection of [mp3 sound samples](https://github.com/yaph/tts-samples/tree/main/mp3) to facilitate picking a voice for your project.
 
+## FastAPI: Gwen-TTS (Yến Nhi)
+
+[Gwen-TTS](https://github.com/ggroup-ai-lab/gwen-tts) is available on the same
+GET `/tts` endpoint with `provider=gwen`. The default speaker is `yen_nhi`
+(Yến Nhi). POST JSON `/tts` supports the same provider too.
+
+Install the isolated Gwen environment once, then start the API as usual:
+
+```powershell
+cd F:\edge-tts
+powershell -ExecutionPolicy Bypass -File .\setup_gwen.ps1
+powershell -ExecutionPolicy Bypass -File .\start_server.ps1
+```
+
+GET example (paste into the browser or your client):
+
+```text
+http://127.0.0.1:8000/tts?provider=gwen&voice=yen_nhi&text=Xin%20chao&format=mp3
+```
+
+`voice`, `voiceid`, and `voice_id` accept either `yen_nhi` or `Yến Nhi`.
+GET `/gwen/voices` lists all nine bundled speakers without downloading or
+loading the model. Unknown speakers return 404; a missing runtime or inference
+failure returns 503 with a diagnostic. `FORCE_VOICE_ID` applies to Gwen too;
+set `FIXED_VOICE_ID` to a Gwen speaker when forcing that provider's voice.
+
+Gwen runs in a persistent subprocess using `.venv-gwen`, because its
+`transformers==4.57.3` dependency differs from the main API environment. Do not
+install `requirements-gwen.txt` into `.venv-rvc`. The API starts the worker on
+the first cache miss and retains the loaded model and speaker prompts. The
+first request downloads the pinned model revision into `models/gwen/model`
+(about a few GB for the complete runtime/model); CPU generation can be slow.
+SDK/model versions and voice asset sources are in `voice_packs/gwen/README.md`.
+The upstream source checkout is `vendor/gwen-tts` at
+`f0f24d8636596dc635323e02f41bee42bb64385e`.
+
+The runtime auto-selects CUDA if available, otherwise CPU with float32 and
+SDPA attention. On an NVIDIA machine, run `setup_gwen.ps1 -Cuda` to install
+CUDA PyTorch. FlashAttention is not required. Optional environment settings:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `GWEN_PYTHON` | `.venv-gwen/Scripts/python.exe` on Windows | Isolated runtime executable (absolute path recommended) |
+| `GWEN_DEVICE` | `auto` | `cpu` or `cuda:0` to force a device |
+| `GWEN_DTYPE` | `auto` | float32 on CPU, bfloat16 on CUDA; can be overridden |
+| `GWEN_THREADS` | `4` | CPU thread count |
+| `GWEN_TIMEOUT` | `900` | Maximum seconds per inference request, including initial loading |
+| `GWEN_AUDIO_CACHE_DIR` | `models/gwen/audio_cache` | Persistent WAV and MP3 cache |
+| `GWEN_MODEL_ID` | `g-group-ai-lab/gwen-tts-0.6B` | Model ID or complete local model directory |
+| `GWEN_MODEL_REVISION` | pinned upstream revision | Override when intentionally updating model weights |
+
+Restart the API after changing runtime/model settings. Worker diagnostics are
+in `models/gwen/worker.log`. Existing audio is cached on disk with a 32 MiB RAM
+limit; concurrent identical requests reuse one generation. GET supports ETags,
+byte ranges, and HEAD. WAV is the default format; use `format=mp3` for MP3.
+Text is normalized with `sea-g2p` and split into chunks of at most 320
+characters before inference. Edge's `rate`, `volume`, `pitch` and ZeroTTS's
+`seed`/`eoa_extra_frames` do not affect Gwen.
+
+Docker/Gradio deployment payloads include the adapter and reference recordings.
+To enable synthesis there, provision the separate Gwen environment and point
+`GWEN_PYTHON` at it; the main requirements intentionally keep the existing
+transformers version. On Linux, create `.venv-gwen` with `python -m venv`,
+install CPU/CUDA PyTorch there, then install `requirements-gwen.txt` with that
+environment's Python. Merely deploying the main API does not install Gwen's
+isolated runtime.
+
+## FastAPI: VieNeu-TTS
+
+[VieNeu-TTS](https://github.com/pnnbao97/VieNeu-TTS) v3 Turbo is available through
+the existing GET/POST `/tts` endpoint with `provider=vieneu`. The SDK is pinned
+to `vieneu==3.8.3`; a local source checkout is in `vendor/VieNeu-TTS`
+(commit `bd0f88eb8de7d560753a6172ba9c868f309a101c`). To recreate the checkout:
+
+```powershell
+git clone https://github.com/pnnbao97/VieNeu-TTS.git vendor/VieNeu-TTS
+git -C vendor/VieNeu-TTS checkout bd0f88eb8de7d560753a6172ba9c868f309a101c
+.\.venv-rvc\Scripts\python.exe -m pip install -r requirements.txt
+.\start_server.ps1
+```
+
+POST JSON example (WAV is the default; use `format=mp3` for MP3):
+
+```json
+{
+  "provider": "vieneu",
+  "text": "Xin chào, đây là giọng đọc VieNeu.",
+  "voice": "Mai Anh",
+  "format": "mp3"
+}
+```
+
+Browser/GET example:
+
+```text
+http://127.0.0.1:8000/tts?provider=vieneu&text=Xin%20chao&format=mp3
+```
+
+GET `/vieneu/voices` lists preset names accepted by `voice`, `voiceid`, or
+`voice_id`. Omit the voice to use the SDK default. Supplying an unknown name
+returns 404. `FORCE_VOICE_ID` also applies to VieNeu requests; set the fixed ID
+to a VieNeu preset name when using this provider.
+
+The first VieNeu request loads the model and downloads any missing weights to
+the Hugging Face cache (honors `HF_HOME`/`HF_HUB_CACHE`). Later requests reuse
+the model. CPU/ONNX with fp32 and 4 threads is the default; set `VIENEU_THREADS`
+to change the thread count. Inference runs in a worker thread and is serialized.
+WAV output is mono PCM16 at 48 kHz. MP3 delivery uses the existing encoder and
+`VIENEU_AUDIO_CACHE_DIR` (default `models/vieneu/audio_cache`). WAV audio is
+cached on disk and in a 32 MiB RAM cache so repeated requests return the same
+audio, including after a restart. Remove this directory after changing model
+weights to regenerate audio. GET supports byte ranges and ETags, and HEAD
+returns audio metadata.
+
+To use a configured CUDA runtime instead, set `VIENEU_BACKEND=pytorch` and
+`VIENEU_DEVICE=cuda` after installing compatible GPU dependencies following
+the upstream README. Edge's `rate`, `volume`, `pitch` and ZeroTTS's `seed` and
+`eoa_extra_frames` do not affect VieNeu. Other providers keep their current
+routing; select VieNeu explicitly with `provider=vieneu`.
+
 ## FastAPI: V-TTS Zero-Shot
 
 The API server also exposes non-streaming Vietnamese zero-shot voice cloning.

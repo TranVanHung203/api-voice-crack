@@ -4,6 +4,7 @@ __pycache__/
 .envrc
 .venv/
 .venv-rvc/
+.venv-gwen/
 .vscode/
 .pytest_cache/
 .tmp_vieneu/
@@ -15,4 +16,5 @@ tools/
 *.log
 *.mp3
 *.wav
+!voice_packs/gwen/data/ref_audio/*.wav
 models/

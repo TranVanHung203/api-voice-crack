@@ -40,6 +40,12 @@ from zerotts_backend import (
     ZeroTTSVoiceNotFoundError,
     zerotts_backend,
 )
+from vieneu_backend import (
+    VieNeuBackendError,
+    VieNeuVoiceNotFoundError,
+    vieneu_backend,
+)
+from gwen_backend import GwenBackendError, GwenVoiceNotFoundError, gwen_backend
 
 # Set True to override client voice IDs; set FIXED_VOICE_ID to your installed ID.
 # Restart the server after changing these settings.
@@ -93,7 +99,10 @@ async def lifespan(_app: FastAPI):
             await asyncio.wait_for(warm_edge(), timeout=5)
         except Exception:
             pass  # Warmup failure must not block startup.
-    yield
+    try:
+        yield
+    finally:
+        await asyncio.to_thread(gwen_backend.close)
 
 
 app = FastAPI(title="edge-tts API vCache", lifespan=lifespan)
@@ -328,7 +337,7 @@ async def _synthesize_tts_response(
     format: Literal["wav", "mp3"] | None = None,
     request: Request | None = None,
 ) -> Response:
-    """Route a unified /tts request to Edge TTS, V-TTS, or ZeroTTS."""
+    """Route a unified /tts request to the selected speech engine."""
     if not text.strip():
         raise HTTPException(status_code=400, detail="text must not be empty")
     voiceid = _effective_voice_id(voiceid)
@@ -336,11 +345,32 @@ async def _synthesize_tts_response(
         # Edge cannot use registered IDs; preserve explicit ZeroTTS/V-TTS routing.
         provider = None
     selected_provider = provider.strip().lower() if provider else None
-    if selected_provider not in {None, "edge", "vtts", "zerotts"}:
+    if selected_provider not in {None, "edge", "vtts", "zerotts", "vieneu", "gwen"}:
         raise HTTPException(
-            status_code=400, detail="provider must be edge, vtts, or zerotts"
+            status_code=400, detail="provider must be edge, vtts, zerotts, vieneu, or gwen"
         )
     resolved_voiceid = voiceid.strip() if voiceid else None
+    if selected_provider in {"vieneu", "gwen"}:
+        backend = gwen_backend if selected_provider == "gwen" else vieneu_backend
+        if not resolved_voiceid and voice != "vi-VN-HoaiMyNeural":
+            resolved_voiceid = voice.strip() or None
+        try:
+            audio = await asyncio.to_thread(
+                backend.synthesize_wav, text.strip(), resolved_voiceid
+            )
+            output_format = format or "wav"
+            if output_format == "mp3":
+                audio = await asyncio.to_thread(
+                    encode_mp3, audio, backend.audio_cache_dir()
+                )
+        except (VieNeuVoiceNotFoundError, GwenVoiceNotFoundError) as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except (VieNeuBackendError, GwenBackendError, AudioEncodingError) as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        return audio_response(
+            audio, "audio/mpeg" if output_format == "mp3" else "audio/wav",
+            f"{selected_provider}.{output_format}", request,
+        )
     if resolved_voiceid is None and selected_provider in {"vtts", "zerotts"}:
         if voice != "vi-VN-HoaiMyNeural":
             resolved_voiceid = voice
@@ -384,7 +414,7 @@ async def _synthesize_tts_response(
         return await _zerotts_audio_response(audio, format or "wav", request)
 
     if format is not None:
-        raise HTTPException(status_code=400, detail="format is supported only for ZeroTTS")
+        raise HTTPException(status_code=400, detail="format is supported only for ZeroTTS, VieNeu, and Gwen")
 
     if resolved_voiceid and selected_provider != "edge":
         try:
@@ -416,7 +446,7 @@ async def _synthesize_tts_response(
 
 @app.post("/tts")
 async def text_to_speech(req: TTSRequest, request: Request):
-    """Unified JSON endpoint for Edge TTS, V-TTS, and ZeroTTS."""
+    """Unified JSON endpoint for Edge, V-TTS, ZeroTTS, VieNeu, and Gwen."""
     if not FORCE_VOICE_ID and req.voiceid and req.voice_id and req.voiceid != req.voice_id:
         raise HTTPException(status_code=400, detail="voiceid and voice_id must match")
     return await _synthesize_tts_response(
@@ -441,10 +471,11 @@ async def text_to_speech_get(
     text: str = Query(description="Text to synthesize"),
     voice: str = Query(default="vi-VN-HoaiMyNeural"),
     voiceid: str | None = Query(
-        default=None, description="Registered V-TTS or ZeroTTS voice ID"
+        default=None, description="V-TTS/ZeroTTS voice ID or VieNeu/Gwen preset name"
     ),
+    voice_id: str | None = Query(default=None, description="Alias of voiceid"),
     provider: str | None = Query(
-        default=None, description="Optional provider: edge, vtts, or zerotts"
+        default=None, description="Optional provider: edge, vtts, zerotts, vieneu, or gwen"
     ),
     rate: str = Query(default="-10%"),
     volume: str = Query(default="+100%"),
@@ -452,13 +483,15 @@ async def text_to_speech_get(
     eoa_extra_frames: int = Query(default=1, ge=1, le=12),
     seed: int | None = Query(default=None, ge=0, le=4294967295,
                              description="ZeroTTS sampling seed; omit to use the server default"),
-    format: Literal["wav", "mp3"] | None = Query(default=None, description="ZeroTTS output format; default wav"),
+    format: Literal["wav", "mp3"] | None = Query(default=None, description="ZeroTTS/VieNeu/Gwen output format; default wav"),
 ):
-    """Unified query endpoint for Edge TTS, V-TTS, and ZeroTTS."""
+    """Unified query endpoint for Edge, V-TTS, ZeroTTS, VieNeu, and Gwen."""
+    if not FORCE_VOICE_ID and voiceid and voice_id and voiceid != voice_id:
+        raise HTTPException(status_code=400, detail="voiceid and voice_id must match")
     return await _synthesize_tts_response(
         text=text,
         voice=voice,
-        voiceid=voiceid,
+        voiceid=voiceid or voice_id,
         provider=provider,
         rate=rate,
         volume=volume,
@@ -599,6 +632,25 @@ async def synthesize_zerotts_voice(req: ZeroTTSSynthesisRequest, request: Reques
     except ZeroTTSBackendError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return await _zerotts_audio_response(audio, req.format, request)
+
+
+@app.get("/gwen/voices")
+async def list_gwen_voices():
+    """List bundled Gwen speakers without loading or downloading the model."""
+    try:
+        return {"voices": gwen_backend.list_voices()}
+    except GwenBackendError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.get("/vieneu/voices")
+async def list_vieneu_voices():
+    """List VieNeu v3 Turbo presets; the first call loads the model."""
+    try:
+        voices = await asyncio.to_thread(vieneu_backend.list_voices)
+    except VieNeuBackendError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return {"voices": voices}
 
 
 @app.get("/voices")
