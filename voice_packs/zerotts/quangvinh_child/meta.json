@@ -1,0 +1,27 @@
+{
+  "name": "quangvinh_child",
+  "display_name": "Quang Vinh - gi\u1ecdng tr\u1ebb h\u00f3a mi\u1ec1n Nam",
+  "language": "vi",
+  "description": "Processed childlike Southern male delivery from Quang Vinh",
+  "tags": [
+    "male",
+    "childlike",
+    "southern",
+    "processed"
+  ],
+  "source_voice_id": "htSzITlVXGL3s4XwNqOv",
+  "source_embedding_sha256": "bc5f1b54063456d127c75d46da6d26555e9f58129fe13abc6ca069b809d0d34a",
+  "provenance": {
+    "catalog": "https://api-prod.zeroweight.ai/api/v1/audio/voices/public?type=community",
+    "retrieved_on": "2026-10-21",
+    "is_public": true,
+    "source_voice_id": "htSzITlVXGL3s4XwNqOv",
+    "voice_bin_sha256": "b2dfc6e9c6de0ff3c6c916ef1c4aceb83ccc6583c6e277d695d6b173b96f719e"
+  },
+  "delivery": {
+    "pitch_semitones": 4.0,
+    "formant_mode": "follow_pitch",
+    "algorithm": "resample_atempo_v2",
+    "tempo": 1.0
+  }
+}

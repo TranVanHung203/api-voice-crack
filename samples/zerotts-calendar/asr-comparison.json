@@ -1,0 +1,218 @@
+[
+  {
+    "file": "before.wav",
+    "recognized": " Trên tàu lịch này có...",
+    "words": [
+      {
+        "word": " Trên",
+        "start": 0.0,
+        "end": 0.7,
+        "probability": 0.6793228089809418
+      },
+      {
+        "word": " tàu",
+        "start": 0.7,
+        "end": 0.96,
+        "probability": 0.7132551223039627
+      },
+      {
+        "word": " lịch",
+        "start": 0.96,
+        "end": 1.14,
+        "probability": 0.9754591286182404
+      },
+      {
+        "word": " này",
+        "start": 1.14,
+        "end": 1.36,
+        "probability": 0.983180582523346
+      },
+      {
+        "word": " có...",
+        "start": 1.36,
+        "end": 1.66,
+        "probability": 0.49320654571056366
+      }
+    ]
+  },
+  {
+    "file": "seed1.wav",
+    "recognized": " trên tờ lịch này cấp.",
+    "words": [
+      {
+        "word": " trên",
+        "start": 0.0,
+        "end": 0.64,
+        "probability": 0.5627307891845703
+      },
+      {
+        "word": " tờ",
+        "start": 0.64,
+        "end": 0.88,
+        "probability": 0.6719359159469604
+      },
+      {
+        "word": " lịch",
+        "start": 0.88,
+        "end": 1.14,
+        "probability": 0.9797283411026001
+      },
+      {
+        "word": " này",
+        "start": 1.14,
+        "end": 1.34,
+        "probability": 0.9608811736106873
+      },
+      {
+        "word": " cấp.",
+        "start": 1.34,
+        "end": 1.58,
+        "probability": 0.5588327646255493
+      }
+    ]
+  },
+  {
+    "file": "seed11.wav",
+    "recognized": " Trên tờ lịch này có...",
+    "words": [
+      {
+        "word": " Trên",
+        "start": 0.0,
+        "end": 0.54,
+        "probability": 0.5797242075204849
+      },
+      {
+        "word": " tờ",
+        "start": 0.54,
+        "end": 0.8,
+        "probability": 0.8407867550849915
+      },
+      {
+        "word": " lịch",
+        "start": 0.8,
+        "end": 1.0,
+        "probability": 0.9574505090713501
+      },
+      {
+        "word": " này",
+        "start": 1.0,
+        "end": 1.22,
+        "probability": 0.9549667835235596
+      },
+      {
+        "word": " có...",
+        "start": 1.22,
+        "end": 1.48,
+        "probability": 0.6553821116685867
+      }
+    ]
+  },
+  {
+    "file": "seed42.wav",
+    "recognized": " Chuyên tò lịch này có...",
+    "words": [
+      {
+        "word": " Chuyên",
+        "start": 0.0,
+        "end": 0.28,
+        "probability": 0.5665539801120758
+      },
+      {
+        "word": " tò",
+        "start": 0.28,
+        "end": 0.5,
+        "probability": 0.7071488946676254
+      },
+      {
+        "word": " lịch",
+        "start": 0.5,
+        "end": 0.74,
+        "probability": 0.9351268112659454
+      },
+      {
+        "word": " này",
+        "start": 0.74,
+        "end": 0.98,
+        "probability": 0.9822316765785217
+      },
+      {
+        "word": " có...",
+        "start": 0.98,
+        "end": 1.36,
+        "probability": 0.6785824596881866
+      }
+    ]
+  },
+  {
+    "file": "seed7.wav",
+    "recognized": " Trên tờ lịch này có...",
+    "words": [
+      {
+        "word": " Trên",
+        "start": 0.0,
+        "end": 0.58,
+        "probability": 0.882270097732544
+      },
+      {
+        "word": " tờ",
+        "start": 0.58,
+        "end": 0.82,
+        "probability": 0.9116033017635345
+      },
+      {
+        "word": " lịch",
+        "start": 0.82,
+        "end": 1.06,
+        "probability": 0.9829355180263519
+      },
+      {
+        "word": " này",
+        "start": 1.06,
+        "end": 1.3,
+        "probability": 0.9751275777816772
+      },
+      {
+        "word": " có...",
+        "start": 1.3,
+        "end": 1.54,
+        "probability": 0.6452898383140564
+      }
+    ]
+  },
+  {
+    "file": "tail4.wav",
+    "recognized": " Trên tàu lịch này có...",
+    "words": [
+      {
+        "word": " Trên",
+        "start": 0.0,
+        "end": 0.7,
+        "probability": 0.6793228089809418
+      },
+      {
+        "word": " tàu",
+        "start": 0.7,
+        "end": 0.96,
+        "probability": 0.7132551223039627
+      },
+      {
+        "word": " lịch",
+        "start": 0.96,
+        "end": 1.14,
+        "probability": 0.9754591286182404
+      },
+      {
+        "word": " này",
+        "start": 1.14,
+        "end": 1.36,
+        "probability": 0.983180582523346
+      },
+      {
+        "word": " có...",
+        "start": 1.36,
+        "end": 1.66,
+        "probability": 0.49320654571056366
+      }
+    ]
+  }
+]

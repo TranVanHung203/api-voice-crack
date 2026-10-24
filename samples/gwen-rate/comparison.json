@@ -1,0 +1,27 @@
+{
+  "text": "Xin chào các bạn, một bàn tay có năm ngón tay đúng không nhỉ, cùng đếm với mình nha.",
+  "source_sha256": "55c2ddb9ad8bb8105ce518fd6c88fa267cf141f0e0b7c5dcebe09c0348118acb",
+  "variants": [
+    {
+      "name": "original",
+      "tempo": 1.0,
+      "seconds": 3.84,
+      "sample_rate": 24000,
+      "file": "yen-nhi-original.mp3"
+    },
+    {
+      "name": "minus-10",
+      "tempo": 0.9,
+      "seconds": 4.255,
+      "sample_rate": 24000,
+      "file": "yen-nhi-minus-10.mp3"
+    },
+    {
+      "name": "minus-20",
+      "tempo": 0.8,
+      "seconds": 4.777,
+      "sample_rate": 24000,
+      "file": "yen-nhi-minus-20.mp3"
+    }
+  ]
+}

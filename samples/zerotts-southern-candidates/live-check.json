@@ -1,0 +1,18 @@
+{
+  "voice_id": "quangvinh_child",
+  "text": "Xin ch\u00e0o c\u00e1c b\u1ea1n! M\u00ecnh c\u00f9ng b\u1eaft \u0111\u1ea7u th\u00f4i.",
+  "requests": [
+    {
+      "status": 200,
+      "seconds": 50.906,
+      "bytes": 226158,
+      "sha256": "549a0941c3c5ea6f39706b04dd258a928137513ddec151bf392e408a71f6e0a2"
+    },
+    {
+      "status": 200,
+      "seconds": 2.078,
+      "bytes": 226158,
+      "sha256": "549a0941c3c5ea6f39706b04dd258a928137513ddec151bf392e408a71f6e0a2"
+    }
+  ]
+}

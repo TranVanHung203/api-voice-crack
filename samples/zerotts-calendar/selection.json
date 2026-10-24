@@ -1,0 +1,18 @@
+{
+  "voice_id": "VpYLlCQEgcoHgycJstNP",
+  "text": "Trên tờ lịch này có",
+  "before": {"file": "before.wav", "source": "Hugging Face API, default settings"},
+  "after": {
+    "file": "after.wav",
+    "seed": 7,
+    "model_text": "Trên tờ lịch này có; Bắt đầu thôi.",
+    "source": "Local pinned ZeroTTS model with the same generation settings as the backend",
+    "recognized_raw_text": "trên tờ lịch này có bắt đầu thôi.",
+    "aligned_co_start_seconds": 1.2097560975609756,
+    "protected_co_end_seconds": 1.4517073170731707,
+    "cut_seconds": 1.576,
+    "fade_start_seconds": 1.561,
+    "cut_method": "low_energy_zero_crossing"
+  },
+  "verification": "ASR confirmed the complete phrase and hidden suffix; CTC aligned có, and the fade starts after its protected end. This is an automated check, not a listening evaluation."
+}

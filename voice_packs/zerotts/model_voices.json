@@ -1,0 +1,109 @@
+{
+  "model_id": "zeroweight-ai/ZeroTTS",
+  "revision": "c2bfbd67dc648cac455077333f7cf5c18a2e3bb4",
+  "voices": [
+    {
+      "voice_id": "baotrang",
+      "display_name": "Bảo Trang",
+      "language": "vi",
+      "description": "nữ, trưởng thành, tin tức, rõ ràng, trung tính",
+      "tags": [
+        "nữ",
+        "trưởng thành",
+        "tin tức",
+        "rõ ràng",
+        "trung tính"
+      ]
+    },
+    {
+      "voice_id": "giahuy",
+      "display_name": "Gia Huy",
+      "language": "vi",
+      "description": "nam, trẻ, kể chuyện, trầm ấm, tâm tình",
+      "tags": [
+        "nam",
+        "trẻ",
+        "kể chuyện",
+        "trầm ấm",
+        "tâm tình"
+      ]
+    },
+    {
+      "voice_id": "hamy",
+      "display_name": "Hà My",
+      "language": "vi",
+      "description": "nữ, trẻ, hoạt hình, cao, biểu cảm",
+      "tags": [
+        "nữ",
+        "trẻ",
+        "hoạt hình",
+        "cao",
+        "biểu cảm"
+      ]
+    },
+    {
+      "voice_id": "huuduc",
+      "display_name": "Hữu Đức",
+      "language": "vi",
+      "description": "nam, lớn tuổi, kể chuyện, trầm, điềm đạm",
+      "tags": [
+        "nam",
+        "lớn tuổi",
+        "kể chuyện",
+        "trầm",
+        "điềm đạm"
+      ]
+    },
+    {
+      "voice_id": "kimoanh",
+      "display_name": "Kim Oanh",
+      "language": "vi",
+      "description": "nữ, trung niên, kể chuyện, ấm áp, truyền cảm",
+      "tags": [
+        "nữ",
+        "trung niên",
+        "kể chuyện",
+        "ấm áp",
+        "truyền cảm"
+      ]
+    },
+    {
+      "voice_id": "maichi",
+      "display_name": "Mai Chi",
+      "language": "vi",
+      "description": "nữ, trẻ, nhẹ nhàng, thân thiện",
+      "tags": [
+        "nữ",
+        "trẻ",
+        "nhẹ nhàng",
+        "thân thiện"
+      ]
+    },
+    {
+      "voice_id": "quangminh",
+      "display_name": "Quang Minh",
+      "language": "vi",
+      "description": "nam, trẻ, tin tức, rõ ràng, dứt khoát",
+      "tags": [
+        "nam",
+        "trẻ",
+        "tin tức",
+        "rõ ràng",
+        "dứt khoát"
+      ]
+    },
+    {
+      "voice_id": "tiendat",
+      "display_name": "Tiến Đạt",
+      "language": "vi",
+      "description": "nam, trẻ, bình luận, sôi nổi, năng lượng cao",
+      "tags": [
+        "nam",
+        "trẻ",
+        "bình luận",
+        "sôi nổi",
+        "năng lượng cao"
+      ]
+    }
+  ]
+}

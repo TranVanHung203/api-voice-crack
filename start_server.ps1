@@ -10,6 +10,10 @@ if (-not (Test-Path -LiteralPath $ttsPython)) {
     throw "Missing Python environment: $ttsPython"
 }
 
+# ZeroTTS 0.1.5 reads some JSON metadata without an explicit encoding.
+# Python must use UTF-8 instead of the Windows ANSI code page for those files.
+$env:PYTHONUTF8 = "1"
+
 $env:ZEROTTS_ENABLE_HIDDEN_SUFFIX = if ($DisableHiddenSuffix) { "0" } else { "1" }
 if (-not $env:ZEROTTS_SUFFIX_DEBUG) { $env:ZEROTTS_SUFFIX_DEBUG = "1" }
 if (-not $env:OMP_NUM_THREADS) { $env:OMP_NUM_THREADS = "4" }

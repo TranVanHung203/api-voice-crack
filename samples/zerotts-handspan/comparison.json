@@ -1,0 +1,10 @@
+{
+  "text": "Đây là gang tay.",
+  "voice_id": "VpYLlCQEgcoHgycJstNP",
+  "tempo": 0.9,
+  "before_file": "before.wav",
+  "after_file": "after.wav",
+  "before_seconds": 1.2923958333333334,
+  "after_seconds": 1.4322291666666667,
+  "method": "FFmpeg atempo after suffix processing; pitch is intended to stay unchanged."
+}

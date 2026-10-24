@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -11,8 +12,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = (
     "Dockerfile", ".dockerignore", "README.md", "requirements.txt", "LICENSE", "gpl-3.0.txt",
-    "server.py", "zerotts_backend.py", "zerotts_suffix.py", "tts_delivery.py", "vtts_backend.py",
-    "DEPLOY_HUGGINGFACE.md", "vieneu_backend.py", "gwen_backend.py", "gwen_worker.py", "requirements-gwen.txt", "setup_gwen.ps1",
+    "server.py", "zerotts_backend.py", "zerotts_suffix.py", "tts_delivery.py", "audio_cache_store.py", "vtts_backend.py",
+    "DEPLOY_HUGGINGFACE.md", "vieneu_backend.py", "gwen_backend.py", "gwen_worker.py", "requirements-gwen.txt", "setup_gwen.ps1", "setup_gwen.py",
     "hf_app.py", "requirements-gradio.txt", "requirements-hidden-suffix.txt", "packages.txt",
 )
 
@@ -56,12 +57,43 @@ def prepare_archive(payload: dict[str, bytes]) -> Path:
     return archive
 
 
+def configure_audio_cache(api, space_id: str, cache_repo: str) -> int:
+    """Back up local audio and configure durable storage before rebuilding."""
+    from huggingface_hub import CommitOperationAdd, get_token
+
+    sys.path.insert(0, str(ROOT))
+    from audio_cache_store import local_cache_files
+
+    token = api.token or get_token()
+    if not token:
+        raise SystemExit("A write token is required for the private audio cache")
+    api.create_repo(cache_repo, repo_type="dataset", private=True, exist_ok=True)
+    if not api.repo_info(cache_repo, repo_type="dataset").private:
+        raise SystemExit("Audio cache repository must be private; choose a private --cache-repo")
+    existing = set(api.list_repo_files(cache_repo, repo_type="dataset"))
+    pending = {}
+    for name, path in local_cache_files():
+        if name not in existing:
+            pending[name] = path
+    entries = list(pending.items())
+    for offset in range(0, len(entries), 100):
+        api.create_commit(
+            repo_id=cache_repo, repo_type="dataset", commit_message="Back up generated audio before deploy",
+            operations=[CommitOperationAdd(path_in_repo=name, path_or_fileobj=str(path))
+                        for name, path in entries[offset:offset + 100]],
+        )
+    api.add_space_secret(repo_id=space_id, key="HF_AUDIO_CACHE_TOKEN", value=token)
+    api.add_space_variable(repo_id=space_id, key="HF_AUDIO_CACHE_REPO", value=cache_repo)
+    return len(entries)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-id", help="owner/space-name; defaults to your-account/edge-tts-api")
     parser.add_argument("--private", action="store_true", help="Create a private Space")
     parser.add_argument("--sdk", choices=["gradio", "docker"], default="gradio")
     parser.add_argument("--account", help="Select an account from locally saved credentials")
+    parser.add_argument("--cache-repo", help="Private dataset for audio; defaults to owner/space-name-audio-cache")
     parser.add_argument("--prepare-only", action="store_true", help="Build the ZIP without logging in or uploading")
     args = parser.parse_args()
     files = deployment_files()
@@ -111,6 +143,11 @@ def main() -> None:
         info = api.space_info(repo_id)
     if info.sdk != args.sdk:
         raise SystemExit(f"{repo_id} uses {info.sdk}, not {args.sdk}; choose a different Space")
+    cache_repo = args.cache_repo or f"{repo_id}-audio-cache"
+    if not re.fullmatch(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+", cache_repo):
+        raise SystemExit("cache-repo must have the form owner/dataset-name")
+    backed_up = configure_audio_cache(api, repo_id, cache_repo)
+    print(f"Private audio cache: {cache_repo} ({backed_up} local files backed up)")
     api.create_commit(
         repo_id=repo_id,
         repo_type="space",

@@ -1,3 +1,7 @@
 py -3.11 -c "from zerotts_backend import zerotts_backend; print(zerotts_backend.install_voice_pack(r'C:\duong-dan\giong-moi.zip'))"
 cd F:\edge-tts
 powershell -ExecutionPolicy Bypass -File .\start_server.ps1
+
+cd F:\edge-tts
+.\.venv-rvc\Scripts\python.exe -c "from huggingface_hub import login; login()"
+.\.venv-rvc\Scripts\python.exe tools\deploy_huggingface.py --sdk gradio --account tranvanhung203 --repo-id tranvanhung203/edge-tts-api

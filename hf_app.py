@@ -48,6 +48,10 @@ app = gr.routes.App.create_app(demo, app_kwargs=api_app_kwargs())
 os.environ["PORT"] = "7860"
 
 if __name__ == "__main__":
+    if os.getenv("SPACE_ID") and os.getenv("GWEN_AUTO_SETUP", "1") != "0":
+        from setup_gwen import prepare_space_runtime
+
+        prepare_space_runtime()
     # launch() runs the ZeroGPU startup hook; direct uvicorn.run() skips it.
     demo.launch(
         server_name="0.0.0.0", server_port=7860,

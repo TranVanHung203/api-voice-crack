@@ -1,0 +1,473 @@
+[
+  {
+    "variant": "comma7",
+    "status": "trimmed",
+    "suffix_start": 1.5126050420168065,
+    "asr_start": 1.44,
+    "protected_prefix_end": 1.4521008403361342,
+    "cut_point": 1.4921875,
+    "before_duration": 2.4,
+    "after_duration": 1.4921875,
+    "recognized_text": " Trên tờ lịch này có bắt đầu thôi.",
+    "aligned_words": [
+      {
+        "word": "trên",
+        "start": 0.4235294117647058,
+        "end": 0.5445378151260504,
+        "probability": 0.9947342872619629
+      },
+      {
+        "word": "tờ",
+        "start": 0.6453781512605041,
+        "end": 0.7462184873949579,
+        "probability": 0.984188050031662
+      },
+      {
+        "word": "lịch",
+        "start": 0.826890756302521,
+        "end": 0.9478991596638654,
+        "probability": 0.9687677919864655
+      },
+      {
+        "word": "này",
+        "start": 1.0487394957983192,
+        "end": 1.230252100840336,
+        "probability": 0.9989946683247884
+      },
+      {
+        "word": "có",
+        "start": 1.3915966386554621,
+        "end": 1.4521008403361342,
+        "probability": 0.9988105297088623
+      },
+      {
+        "word": "bắt",
+        "start": 1.5126050420168065,
+        "end": 1.5932773109243696,
+        "probability": 0.9984835982322693
+      },
+      {
+        "word": "đầu",
+        "start": 1.6739495798319326,
+        "end": 1.8151260504201678,
+        "probability": 0.9994824926058451
+      },
+      {
+        "word": "thôi",
+        "start": 1.9361344537815124,
+        "end": 2.218487394957983,
+        "probability": 0.9857658743858337
+      }
+    ],
+    "cut_method": "ctc_timestamp_zero_crossing",
+    "detection": {
+      "recognized_text": " Trên tờ lịch này có bắt đầu thôi.",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.44,
+          1.62,
+          0.9895952939987183
+        ],
+        [
+          "đầu",
+          1.62,
+          1.88,
+          0.9995524287223816
+        ],
+        [
+          "thôi",
+          1.88,
+          2.14,
+          0.9461826086044312
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "trên",
+        "tờ",
+        "lịch",
+        "này",
+        "có"
+      ],
+      "alignment_context": [
+        "trên",
+        "tờ",
+        "lịch",
+        "này",
+        "có"
+      ],
+      "ctc_recognized_text": "trên tờ lịch này có bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "trên",
+          "start": 0.4235294117647058,
+          "end": 0.5445378151260504,
+          "probability": 0.9947342872619629
+        },
+        {
+          "word": "tờ",
+          "start": 0.6453781512605041,
+          "end": 0.7462184873949579,
+          "probability": 0.984188050031662
+        },
+        {
+          "word": "lịch",
+          "start": 0.826890756302521,
+          "end": 0.9478991596638654,
+          "probability": 0.9687677919864655
+        },
+        {
+          "word": "này",
+          "start": 1.0487394957983192,
+          "end": 1.230252100840336,
+          "probability": 0.9989946683247884
+        },
+        {
+          "word": "có",
+          "start": 1.3915966386554621,
+          "end": 1.4521008403361342,
+          "probability": 0.9988105297088623
+        },
+        {
+          "word": "bắt",
+          "start": 1.5126050420168065,
+          "end": 1.5932773109243696,
+          "probability": 0.9984835982322693
+        },
+        {
+          "word": "đầu",
+          "start": 1.6739495798319326,
+          "end": 1.8151260504201678,
+          "probability": 0.9994824926058451
+        },
+        {
+          "word": "thôi",
+          "start": 1.9361344537815124,
+          "end": 2.218487394957983,
+          "probability": 0.9857658743858337
+        }
+      ],
+      "asr_final_word": [
+        "có",
+        1.22,
+        1.44,
+        0.9298089742660522
+      ]
+    }
+  },
+  {
+    "variant": "semicolon7",
+    "status": "trimmed",
+    "suffix_start": 1.5928455284552845,
+    "asr_start": 1.36,
+    "protected_prefix_end": 1.4517073170731707,
+    "cut_point": 1.576,
+    "before_duration": 2.48,
+    "after_duration": 1.576,
+    "recognized_text": " trên tờ lịch này có bắt đầu thôi.",
+    "aligned_words": [
+      {
+        "word": "trên",
+        "start": 0.02016260162601626,
+        "end": 0.20162601626016258,
+        "probability": 0.9977530241012573
+      },
+      {
+        "word": "tờ",
+        "start": 0.3830894308943089,
+        "end": 0.5040650406504065,
+        "probability": 0.8250522017478943
+      },
+      {
+        "word": "lịch",
+        "start": 0.5847154471544715,
+        "end": 0.7258536585365853,
+        "probability": 0.8987754434347153
+      },
+      {
+        "word": "này",
+        "start": 0.8266666666666665,
+        "end": 0.9879674796747967,
+        "probability": 0.9992997646331787
+      },
+      {
+        "word": "có",
+        "start": 1.2097560975609756,
+        "end": 1.4517073170731707,
+        "probability": 0.9995761513710022
+      },
+      {
+        "word": "bắt",
+        "start": 1.5928455284552845,
+        "end": 1.6936585365853658,
+        "probability": 0.9983823895454407
+      },
+      {
+        "word": "đầu",
+        "start": 1.794471544715447,
+        "end": 1.935609756097561,
+        "probability": 0.9993508656819662
+      },
+      {
+        "word": "thôi",
+        "start": 2.0767479674796747,
+        "end": 2.3186991869918696,
+        "probability": 0.9859770089387894
+      }
+    ],
+    "cut_method": "low_energy_zero_crossing",
+    "detection": {
+      "recognized_text": " trên tờ lịch này có bắt đầu thôi.",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.36,
+          1.74,
+          0.9783501327037811
+        ],
+        [
+          "đầu",
+          1.74,
+          1.98,
+          0.9993337988853455
+        ],
+        [
+          "thôi",
+          1.98,
+          2.28,
+          0.974068284034729
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "trên",
+        "tờ",
+        "lịch",
+        "này",
+        "có"
+      ],
+      "alignment_context": [
+        "trên",
+        "tờ",
+        "lịch",
+        "này",
+        "có"
+      ],
+      "ctc_recognized_text": "trên tờ lịch này có bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "trên",
+          "start": 0.02016260162601626,
+          "end": 0.20162601626016258,
+          "probability": 0.9977530241012573
+        },
+        {
+          "word": "tờ",
+          "start": 0.3830894308943089,
+          "end": 0.5040650406504065,
+          "probability": 0.8250522017478943
+        },
+        {
+          "word": "lịch",
+          "start": 0.5847154471544715,
+          "end": 0.7258536585365853,
+          "probability": 0.8987754434347153
+        },
+        {
+          "word": "này",
+          "start": 0.8266666666666665,
+          "end": 0.9879674796747967,
+          "probability": 0.9992997646331787
+        },
+        {
+          "word": "có",
+          "start": 1.2097560975609756,
+          "end": 1.4517073170731707,
+          "probability": 0.9995761513710022
+        },
+        {
+          "word": "bắt",
+          "start": 1.5928455284552845,
+          "end": 1.6936585365853658,
+          "probability": 0.9983823895454407
+        },
+        {
+          "word": "đầu",
+          "start": 1.794471544715447,
+          "end": 1.935609756097561,
+          "probability": 0.9993508656819662
+        },
+        {
+          "word": "thôi",
+          "start": 2.0767479674796747,
+          "end": 2.3186991869918696,
+          "probability": 0.9859770089387894
+        }
+      ],
+      "asr_final_word": [
+        "có",
+        0.98,
+        1.36,
+        0.9666228294372559
+      ]
+    }
+  },
+  {
+    "variant": "period_pause",
+    "status": "trimmed",
+    "suffix_start": 1.9942446043165465,
+    "asr_start": 1.26,
+    "protected_prefix_end": 1.2690647482014388,
+    "cut_point": 1.9489166666666666,
+    "before_duration": 2.8,
+    "after_duration": 1.9489166666666666,
+    "recognized_text": " Trên tờ lịch này có bắt đầu thôi.",
+    "aligned_words": [
+      {
+        "word": "trên",
+        "start": 0.02014388489208633,
+        "end": 0.1410071942446043,
+        "probability": 0.45880988985300064
+      },
+      {
+        "word": "tờ",
+        "start": 0.2618705035971223,
+        "end": 0.3625899280575539,
+        "probability": 0.9036297500133514
+      },
+      {
+        "word": "lịch",
+        "start": 0.44316546762589926,
+        "end": 0.5841726618705035,
+        "probability": 0.9230459630489349
+      },
+      {
+        "word": "này",
+        "start": 0.7050359712230215,
+        "end": 0.8661870503597121,
+        "probability": 0.9990375439325968
+      },
+      {
+        "word": "có",
+        "start": 1.0676258992805754,
+        "end": 1.2690647482014388,
+        "probability": 0.9989596307277679
+      },
+      {
+        "word": "bắt",
+        "start": 1.9942446043165465,
+        "end": 2.094964028776978,
+        "probability": 0.9985742171605428
+      },
+      {
+        "word": "đầu",
+        "start": 2.19568345323741,
+        "end": 2.336690647482014,
+        "probability": 0.9993741909662882
+      },
+      {
+        "word": "thôi",
+        "start": 2.4575539568345324,
+        "end": 2.6589928057553953,
+        "probability": 0.9985585808753967
+      }
+    ],
+    "cut_method": "low_energy_zero_crossing",
+    "detection": {
+      "recognized_text": " Trên tờ lịch này có bắt đầu thôi.",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.26,
+          2.12,
+          0.5904271751642227
+        ],
+        [
+          "đầu",
+          2.12,
+          2.38,
+          0.9996280670166016
+        ],
+        [
+          "thôi",
+          2.38,
+          2.6,
+          0.948523998260498
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "trên",
+        "tờ",
+        "lịch",
+        "này",
+        "có"
+      ],
+      "alignment_context": [
+        "trên",
+        "tờ",
+        "lịch",
+        "này",
+        "có"
+      ],
+      "ctc_recognized_text": "kênh tờ lịch này có bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "trên",
+          "start": 0.02014388489208633,
+          "end": 0.1410071942446043,
+          "probability": 0.45880988985300064
+        },
+        {
+          "word": "tờ",
+          "start": 0.2618705035971223,
+          "end": 0.3625899280575539,
+          "probability": 0.9036297500133514
+        },
+        {
+          "word": "lịch",
+          "start": 0.44316546762589926,
+          "end": 0.5841726618705035,
+          "probability": 0.9230459630489349
+        },
+        {
+          "word": "này",
+          "start": 0.7050359712230215,
+          "end": 0.8661870503597121,
+          "probability": 0.9990375439325968
+        },
+        {
+          "word": "có",
+          "start": 1.0676258992805754,
+          "end": 1.2690647482014388,
+          "probability": 0.9989596307277679
+        },
+        {
+          "word": "bắt",
+          "start": 1.9942446043165465,
+          "end": 2.094964028776978,
+          "probability": 0.9985742171605428
+        },
+        {
+          "word": "đầu",
+          "start": 2.19568345323741,
+          "end": 2.336690647482014,
+          "probability": 0.9993741909662882
+        },
+        {
+          "word": "thôi",
+          "start": 2.4575539568345324,
+          "end": 2.6589928057553953,
+          "probability": 0.9985585808753967
+        }
+      ],
+      "asr_final_word": [
+        "có",
+        0.86,
+        1.26,
+        0.9556075930595398
+      ]
+    }
+  }
+]

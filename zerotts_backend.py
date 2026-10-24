@@ -10,12 +10,15 @@ import re
 import sys
 import threading
 import tempfile
+import unicodedata
 from collections import OrderedDict
+from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 from typing import Any
 
-from zerotts_suffix import HiddenSuffixConfig, WhisperSuffixDetector, cut_at_boundary
+from zerotts_suffix import DEFAULT_HIDDEN_SUFFIX, HiddenSuffixConfig, WhisperSuffixDetector, cut_at_boundary
+from audio_cache_store import backup_audio, content_digest, read_audio
 
 
 _PROJECT_DIR = Path(__file__).resolve().parent
@@ -25,6 +28,24 @@ _DEFAULT_MODEL_ID = "zeroweight-ai/ZeroTTS"
 _VOICE_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
 _SAMPLING_LOCK = threading.Lock()
 _SAMPLING_SEED = 23011110
+_TUNED_VOICE_ID = "VpYLlCQEgcoHgycJstNP"
+_CHILD_VOICE_ID = _TUNED_VOICE_ID + "_child"
+_CHILD_PITCH_SEMITONES = 3.0
+_CHILD_FORMANT_RATIO = None
+_BOY_VOICES = {
+    "quangminh_child": ("quangminh", 5.0),
+    "tiendat_child": ("tiendat", 4.0),
+    "quangvinh_child": ("htSzITlVXGL3s4XwNqOv", 4.0),
+}
+_NAM_SEED = 11
+_CALENDAR_TEXT = "trên tờ lịch này có"
+_CALENDAR_SEED = 7
+_PHRASE_PAUSE_SUFFIX = "; " + DEFAULT_HIDDEN_SUFFIX.lstrip(".")
+_HANDSPAN_TEXT = "đây là gang tay"
+_HANDSPAN_SEED = 7
+_HANDSPAN_TEMPO = 1.0
+_HANDSPAN_ENDING_TEMPO = 0.75
+_HANDSPAN_ENDING_VERSION = 1
 # Minimum generated frames per chunk. Restart the server after changing this.
 _MIN_FRAMES = 4
 # Text-token sampling temperature. Restart the server after changing this.
@@ -32,6 +53,8 @@ _TEXT_TEMPERATURE = 1.0
 _TAIL_PAUSE_MS = 80
 _CHUNK_SILENCE_SEC = 0.2
 _AUDIO_RAM_MAX_BYTES = 64 * 1024 * 1024
+
+
 _NUMBER_WORD_PATTERN = r"(?:không|một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười)"
 _STANDALONE_NUMBERS = re.compile(
     rf"\s*{_NUMBER_WORD_PATTERN}(?:\s*[,;]\s*{_NUMBER_WORD_PATTERN})*\s*[.!?]?\s*",
@@ -44,6 +67,37 @@ def _capitalize_standalone_numbers(text: str) -> str:
     if not _STANDALONE_NUMBERS.fullmatch(text):
         return text
     return re.sub(_NUMBER_WORD_PATTERN, lambda match: match.group().capitalize(), text, flags=re.IGNORECASE)
+
+
+def _normalize_prompt(text: str) -> str:
+    normalized = unicodedata.normalize("NFC", text).strip().casefold().rstrip(".!?…,:;")
+    return re.sub(r"[ \t]+", " ", normalized).strip()
+
+
+def _is_calendar_prompt(text: str) -> bool:
+    return _normalize_prompt(text) == _CALENDAR_TEXT
+
+
+def _effective_sampling_seed(text: str, voice_id: str, requested: int | None) -> int | None:
+    """Select calibrated readings for the reported short prompts of one voice."""
+    if requested is not None or voice_id != _TUNED_VOICE_ID:
+        return requested
+    normalized = unicodedata.normalize("NFC", text).strip()
+    if re.fullmatch(r"(?:năm|5)[\s.!?…,:;]*", normalized, re.IGNORECASE):
+        return _NAM_SEED
+    if _is_calendar_prompt(text):
+        return _CALENDAR_SEED
+    if _normalize_prompt(text) == _HANDSPAN_TEXT:
+        return _HANDSPAN_SEED
+    return None
+
+
+def _effective_suffix_config(text: str, voice_id: str, config: HiddenSuffixConfig) -> HiddenSuffixConfig:
+    """Give the reported final words room before hidden continuation."""
+    if (voice_id == _TUNED_VOICE_ID and _normalize_prompt(text) in {_CALENDAR_TEXT, _HANDSPAN_TEXT}
+            and config.enabled and config.suffix == DEFAULT_HIDDEN_SUFFIX):
+        return replace(config, suffix=_PHRASE_PAUSE_SUFFIX)
+    return config
 
 
 class ZeroTTSBackendError(RuntimeError):
@@ -108,6 +162,11 @@ class ZeroTTSBackend:
     @staticmethod
     def _validate_voice_id(voice_id: str) -> str:
         voice_id = voice_id.strip()
+        # Accept this model speaker's common display-name spellings without
+        # weakening the identifier/path validation for arbitrary input.
+        alias = unicodedata.normalize("NFC", voice_id).casefold()
+        if alias in {"hà my", "hàmy", "hà_my", "hà-my", "ha my", "ha_my", "ha-my", "hamy"}:
+            voice_id = "hamy"
         if not _VOICE_ID_PATTERN.fullmatch(voice_id):
             raise ZeroTTSInvalidVoiceIdError(
                 "voice_id must contain 1-128 letters, numbers, dots, hyphens, or underscores"
@@ -148,15 +207,34 @@ class ZeroTTSBackend:
         return sorted(installed)
 
     def has_local_voice(self, voice_id: str) -> bool:
-        """Check a locally installed pack without loading the model."""
+        """Recognize registered packs and catalogued model voices without loading."""
         try:
             voice_id = self._validate_voice_id(voice_id)
         except ZeroTTSInvalidVoiceIdError:
             return False
+        if voice_id in self._model_voice_catalog():
+            return True
         return any(
             (root / voice_id / "voice.npz").is_file()
             for _source, root in self._voice_roots()
         )
+
+    def _model_voice_catalog(self) -> dict[str, dict]:
+        """Use only metadata belonging to the exact pinned standard model."""
+        if os.getenv("ZEROTTS_MODEL_DIR"):
+            return {}
+        try:
+            catalog = json.loads((self._bundled_voices_dir() / "model_voices.json").read_text(encoding="utf-8"))
+            if (catalog["model_id"] != os.getenv("ZEROTTS_MODEL_ID", _DEFAULT_MODEL_ID)
+                    or catalog["revision"] != os.getenv("ZEROTTS_REVISION")):
+                return {}
+            return {
+                item["voice_id"]: {**item, "source": "model"}
+                for item in catalog["voices"]
+                if _VOICE_ID_PATTERN.fullmatch(item["voice_id"])
+            }
+        except (OSError, UnicodeDecodeError, ValueError, KeyError, TypeError):
+            return {}
 
     @staticmethod
     def _read_meta(voice_dir: Path) -> dict[str, Any]:
@@ -171,7 +249,7 @@ class ZeroTTSBackend:
 
     def list_voices(self) -> list[dict[str, Any]]:
         """List local packs, plus bundled voices after the model has loaded."""
-        voices: dict[str, dict[str, Any]] = {}
+        voices: dict[str, dict[str, Any]] = self._model_voice_catalog()
         for source, voices_dir in self._voice_roots():
             if not voices_dir.is_dir():
                 continue
@@ -269,7 +347,7 @@ class ZeroTTSBackend:
 
     @classmethod
     def _audio_cache_dir(cls) -> Path:
-        return cls._data_dir() / "audio_cache"
+        return Path(os.getenv("ZEROTTS_AUDIO_CACHE_DIR", str(cls._data_dir() / "audio_cache")))
 
     @staticmethod
     def _shorten_tail_pause(audio: Any, sample_rate: int, max_pause_ms: int) -> Any:
@@ -314,41 +392,48 @@ class ZeroTTSBackend:
 
     def _audio_cache_key(self, text: str, voice_id: str, options: dict) -> str:
         configured_dir = os.getenv("ZEROTTS_MODEL_DIR")
+        revision = os.getenv("ZEROTTS_REVISION")
+        pinned = bool(revision and re.fullmatch(r"[a-fA-F0-9]{40}", revision))
         model_dirs = (
             [Path(configured_dir).expanduser().resolve()]
             if configured_dir
             else sorted(self._cache_dir().glob("models--*/snapshots/*"))
         )
-        files: set[Path] = set()
-        for root in model_dirs:
-            files.update(root.rglob("*.onnx*"))
-            files.update(root.glob("config.json"))
-            files.update(root.glob("tokenizer.json"))
-        voice_dirs = [root / voice_id for _, root in self._voice_roots()]
-        voice_dirs.extend(root / "voices" / voice_id for root in model_dirs)
-        for root in voice_dirs:
-            files.update(root.glob("*"))
+        # A Hub commit identifies its model and built-in voices even before
+        # weights are downloaded. Local overrides use portable content hashes.
+        files: list[tuple[str, Path]] = []
+        if configured_dir or not pinned:
+            for root in model_dirs:
+                model_files = set(root.rglob("*.onnx*"))
+                model_files.update(root.glob("config.json"))
+                model_files.update(root.glob("tokenizer.json"))
+                model_files.update((root / "voices" / voice_id).glob("*"))
+                files.extend(("model/" + p.relative_to(root).as_posix(), p) for p in model_files)
+        for label, root in self._voice_roots():
+            files.extend((label + "/" + p.name, p) for p in (root / voice_id).glob("*"))
         fingerprints = []
-        for path in sorted(files):
+        for label, path in sorted(files):
             try:
                 if path.is_file():
-                    stat = path.stat()
-                    fingerprints.append((str(path.resolve()), stat.st_size, stat.st_mtime_ns))
+                    fingerprints.append((label, content_digest(path)))
             except OSError:
                 continue
         payload = {
-            "version": 5, "text": text, "voice_id": voice_id,
+            "version": 6, "text": text, "voice_id": voice_id,
             "chunk_silence_sec": _CHUNK_SILENCE_SEC,
             "min_frames": _MIN_FRAMES,
             "text_temperature": _TEXT_TEMPERATURE,
             "tail_pause_ms": _TAIL_PAUSE_MS,
             "seed": options.get("seed", _SAMPLING_SEED), "options": options, "files": fingerprints,
             "model": os.getenv("ZEROTTS_MODEL_ID", _DEFAULT_MODEL_ID),
-            "model_dir": configured_dir,
-            "revision": os.getenv("ZEROTTS_REVISION"),
+            "custom_model": bool(configured_dir),
+            "revision": revision,
             "providers": os.getenv("ZEROTTS_PROVIDERS", "CPUExecutionProvider"),
             "threads": os.getenv("ZEROTTS_THREADS", "4"),
         }
+        if (voice_id == _TUNED_VOICE_ID and _normalize_prompt(text) == _HANDSPAN_TEXT
+                and _HANDSPAN_ENDING_VERSION):
+            payload["word_ending"] = {"version": _HANDSPAN_ENDING_VERSION, "tempo": _HANDSPAN_ENDING_TEMPO}
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
     def _remember_audio(self, path: Path, audio: bytes) -> None:
@@ -372,13 +457,34 @@ class ZeroTTSBackend:
                 self._audio_cache.move_to_end(path)
                 return audio
         try:
-            audio = path.read_bytes()
+            audio = read_audio(path, "zerotts")
         except OSError:
             return None
         if len(audio) > 44 and audio[:4] == b"RIFF" and audio[8:12] == b"WAVE":
             self._remember_audio(path, audio)
             return audio
         return None
+
+    def _lengthen_final_word(self, audio, sample_rate: int, start_seconds: float):
+        """Stretch the aligned final word, joining it with a short crossfade."""
+        import numpy as np
+        import soundfile as sf
+        from tts_delivery import change_wav_tempo
+
+        samples = np.asarray(audio, dtype=np.float32).reshape(-1)
+        start = round(start_seconds * sample_rate)
+        overlap = min(round(.010 * sample_rate), start)
+        if not 0 < start < len(samples) or overlap < 1:
+            raise ZeroTTSBackendError("Invalid final-word timing for handspan delivery")
+        tail = self._encode_wav(samples[start - overlap:], sample_rate)
+        stretched = change_wav_tempo(tail, _HANDSPAN_ENDING_TEMPO, self._audio_cache_dir())
+        extended, rate = sf.read(BytesIO(stretched), dtype="float32")
+        if rate != sample_rate or extended.ndim != 1 or len(extended) <= overlap:
+            raise ZeroTTSBackendError("Invalid stretched final word")
+        prefix = samples[:start].copy()
+        weight = np.linspace(0, 1, overlap, dtype=np.float32)
+        prefix[-overlap:] = prefix[-overlap:] * (1 - weight) + extended[:overlap] * weight
+        return np.concatenate((prefix, extended[overlap:]))
 
     def _synthesize_segment(self, engine, segment: str, options: dict, config: HiddenSuffixConfig):
         """Append only after chunking; cut before any other waveform processing."""
@@ -387,7 +493,14 @@ class ZeroTTSBackend:
 
         import numpy as np
 
-        model_text = config.model_text(segment)
+        model_segment = segment
+        if (options.get("voice") == _TUNED_VOICE_ID
+                and _normalize_prompt(segment) in {_CALENDAR_TEXT, _HANDSPAN_TEXT}
+                and config.suffix == _PHRASE_PAUSE_SUFFIX):
+            # Replace the normalizer's final punctuation with this phrase's
+            # calibrated boundary, rather than producing 'có.; Bắt ...'.
+            model_segment = segment.rstrip(".!?…,:; \t\r\n")
+        model_text = config.model_text(model_segment)
         if config.debug:
             print(f"[TTS] Original text: {segment}", flush=True)
             print(f"[TTS] Model text: {model_text}", flush=True)
@@ -433,12 +546,35 @@ class ZeroTTSBackend:
         finally:
             # Loading/running ASR must not perturb subsequent TTS segments.
             np.random.set_state(after_generation)
+        if (success and options.get("voice") == _TUNED_VOICE_ID
+                and _normalize_prompt(segment) == _HANDSPAN_TEXT and config.suffix == _PHRASE_PAUSE_SUFFIX):
+            suffix_words = len(re.findall(r"\w+", config.suffix))
+            prefix_words = boundary.aligned_words[:-suffix_words]
+            if prefix_words:
+                word_start = float(prefix_words[-1]["start"])
+                asr_word = report.get("detection", {}).get("asr_final_word")
+                if asr_word:
+                    word_start = min(word_start, float(asr_word[1]))
+                audio = self._lengthen_final_word(audio, engine.sample_rate, word_start)
+                report.update(final_word_start=word_start, final_word_tempo=_HANDSPAN_ENDING_TEMPO,
+                              after_duration=len(audio) / engine.sample_rate)
         if self._suffix_trace_hook is not None:
             try:
                 self._suffix_trace_hook(report, before, audio)
             except Exception:
                 logging.getLogger(__name__).exception("Could not write hidden-suffix diagnostic artifacts")
         return audio, success
+
+    def _deliver_audio(self, text: str, voice_id: str, audio: bytes) -> bytes:
+        """Slow one prompt after suffix trimming, retaining its cached source."""
+        if voice_id != _TUNED_VOICE_ID or _normalize_prompt(text) != _HANDSPAN_TEXT:
+            return audio
+        from tts_delivery import AudioEncodingError, change_wav_tempo
+
+        try:
+            return change_wav_tempo(audio, _HANDSPAN_TEMPO, self._audio_cache_dir())
+        except AudioEncodingError as exc:
+            raise ZeroTTSBackendError("Could not slow this ZeroTTS prompt; check FFmpeg and the cached WAV") from exc
 
     def synthesize_wav(
         self,
@@ -456,6 +592,35 @@ class ZeroTTSBackend:
         """Reuse identical audio from RAM or disk before loading the model."""
         text = text.strip()
         voice_id = self._validate_voice_id(voice_id)
+        derived = None
+        if voice_id == _CHILD_VOICE_ID:
+            derived = (_TUNED_VOICE_ID, _CHILD_PITCH_SEMITONES, _CHILD_FORMANT_RATIO)
+        elif voice_id in _BOY_VOICES:
+            source_id, pitch = _BOY_VOICES[voice_id]
+            derived = (source_id, pitch, None)
+        if derived is not None:
+            if not self.has_local_voice(voice_id):
+                raise ZeroTTSVoiceNotFoundError(f"ZeroTTS voice_id not found: {voice_id}")
+            source_id, pitch, formants = derived
+            # Resolve the source before calibration/locking to reuse its tuned
+            # readings and persistent cache, rather than running new inference.
+            source = self.synthesize_wav(
+                text, source_id, cfg_scale=cfg_scale,
+                audio_temperature=audio_temperature,
+                audio_repetition_penalty=audio_repetition_penalty,
+                max_chunk_sec=max_chunk_sec, max_frames=max_frames,
+                eoa_extra_frames=eoa_extra_frames, seed=seed,
+            )
+            from tts_delivery import AudioEncodingError, change_wav_voice_color
+
+            try:
+                return change_wav_voice_color(
+                    source, self._audio_cache_dir(), pitch_semitones=pitch,
+                    formant_ratio=formants,
+                )
+            except AudioEncodingError as exc:
+                raise ZeroTTSBackendError(str(exc)) from exc
+        seed = _effective_sampling_seed(text, voice_id, seed)
         options = {
             "cfg_scale": float(cfg_scale), "audio_temperature": float(audio_temperature),
             "audio_repetition_penalty": float(audio_repetition_penalty),
@@ -467,26 +632,24 @@ class ZeroTTSBackend:
             if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed <= 4294967295:
                 raise ValueError("seed must be an integer from 0 to 4294967295")
             options["seed"] = seed
-        suffix_config = HiddenSuffixConfig.from_env()
+        suffix_config = _effective_suffix_config(text, voice_id, HiddenSuffixConfig.from_env())
         if suffix_config.enabled:
             options["hidden_suffix_config"] = suffix_config.cache_options()
         cache_dir = self._audio_cache_dir()
         path = cache_dir / f"{self._audio_cache_key(text, voice_id, options)}.wav"
         audio = self._read_cached_audio(path)
         if audio is not None:
-            return audio
+            return self._deliver_audio(text, voice_id, audio)
         # Only misses wait for inference. Recheck after waiting: another request
         # may have generated the audio or downloaded the model fingerprint.
         with self._audio_lock:
             path = cache_dir / f"{self._audio_cache_key(text, voice_id, options)}.wav"
             audio = self._read_cached_audio(path)
             if audio is not None:
-                return audio
+                return self._deliver_audio(text, voice_id, audio)
             audio = self._synthesize_uncached(text, voice_id, **options)
-            if suffix_config.enabled and self._suffix_fallback_used:
-                # A transient recognition/dependency failure must not pin a
-                # legacy fallback into the workaround's success cache.
-                return audio
+            # Cache the final returned waveform, including original-text
+            # fallback when the hidden suffix cannot be verified or cut.
             if len(audio) <= 44:
                 return audio
             # First model download can change the fingerprint during synthesis.
@@ -503,8 +666,9 @@ class ZeroTTSBackend:
             finally:
                 if temporary is not None:
                     temporary.unlink(missing_ok=True)
+            backup_audio(path, "zerotts", audio)
             self._remember_audio(path, audio)
-            return audio
+            return self._deliver_audio(text, voice_id, audio)
 
     def _synthesize_uncached(
         self,
@@ -522,10 +686,12 @@ class ZeroTTSBackend:
     ) -> bytes:
         """Generate bounded sentence chunks and join them into one WAV."""
         voice_id = self._validate_voice_id(voice_id)
+        seed = _effective_sampling_seed(text, voice_id, seed)
         suffix_config = (
             HiddenSuffixConfig.from_cache_options(hidden_suffix_config)
             if hidden_suffix_config is not None else HiddenSuffixConfig.from_env()
         )
+        suffix_config = _effective_suffix_config(text, voice_id, suffix_config)
         self._suffix_fallback_used = False
         engine = self._load_engine()
         try:

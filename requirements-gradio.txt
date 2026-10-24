@@ -9,6 +9,7 @@ uvicorn>=0.23.0
 pydantic>=2.0.0
 python-multipart>=0.0.9
 av>=11
+huggingface-hub>=0.34,<2
 v-tts @ https://github.com/tronghieuit/v-tts/archive/e22eef3267869375e40a096b376cde94aa41e610.zip
 zerotts==0.1.5
 vieneu==3.8.3

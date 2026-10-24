@@ -1,0 +1,23 @@
+{
+  "status": "registered_locally_not_deployed",
+  "model": "zeroweight-ai/ZeroTTS",
+  "revision": "c2bfbd67dc648cac455077333f7cf5c18a2e3bb4",
+  "profiles": [
+    {
+      "proposed_id": "quangminh_child",
+      "source_voice_id": "quangminh",
+      "pitch_semitones": 5.0,
+      "tempo": 1.0,
+      "duration": 4.064729166666667,
+      "sample": "F:\\edge-tts\\samples\\zerotts-boys-proposals\\quangminh-child.wav"
+    },
+    {
+      "proposed_id": "tiendat_child",
+      "source_voice_id": "tiendat",
+      "pitch_semitones": 4.0,
+      "tempo": 1.0,
+      "duration": 5.0238958333333334,
+      "sample": "F:\\edge-tts\\samples\\zerotts-boys-proposals\\tiendat-child.wav"
+    }
+  ]
+}

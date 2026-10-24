@@ -92,6 +92,56 @@ Other projects that use the `edge-tts` module include:
 * [Podcastfy](https://github.com/souzatharsis/podcastfy/blob/main/podcastfy/tts/providers/edge.py)
 * [tts-samples](https://github.com/yaph/tts-samples/blob/main/bin/create_sound_samples.py) - a collection of [mp3 sound samples](https://github.com/yaph/tts-samples/tree/main/mp3) to facilitate picking a voice for your project.
 
+## Warm the Gwen/Yến Nhi cache from the TextVoice list
+
+`data/gwen_cache/texts.json` contains **1,070 unique concrete texts** extracted
+from `TONG_HOP_TEXTVOICE_KHOI_DONG_KHAM_PHA.md`. The warmer reads only this JSON
+file; it does not read Dart or interpret Markdown instructions. Edit the array
+to add/remove exact runtime text. Newlines and Vietnamese accents are preserved.
+`pending_templates.json` reports 135 unresolved dynamic rows; these are not sent
+literally to TTS. Technical/debug strings and supplementary UI/data tables are
+excluded. `extraction_report.json` retains source locations and exclusions.
+
+Run from PowerShell:
+
+```powershell
+cd F:\edge-tts
+powershell -ExecutionPolicy Bypass -File .\warm_gwen_cache.ps1
+```
+
+The default URL is `https://tranvanhung203-edge-tts-api.hf.space`. Every request
+uses GET `/tts` with `provider=gwen`, `voice=yen_nhi`, and `format=mp3`. The
+script verifies `/gwen/voices` before starting, makes one request at a time,
+retries transient failures, and stops after three consecutive failed texts.
+
+```powershell
+# Review the selected requests without calling the API:
+.\warm_gwen_cache.ps1 -DryRun
+# Test the first pending text:
+.\warm_gwen_cache.ps1 -Limit 1
+# Rewarm after the Space restarts or its server-side cache is cleared:
+.\warm_gwen_cache.ps1 -Rewarm
+# Override the destination or input file:
+.\warm_gwen_cache.ps1 -BaseUrl http://127.0.0.1:8000 -TextsFile .\data\gwen_cache\texts.json
+```
+
+Successful receipts and local MP3 backups are saved under
+`models/gwen_cache_warmup/` (`progress.jsonl` and `audio/`). Running again resumes
+the remaining texts; `-Rewarm` starts a new progress batch and calls previously
+successful requests again. If that batch is interrupted, rerun without
+`-Rewarm` to continue the new batch.
+`requests.jsonl` lists selected URLs; `preflight.json` records readiness/failures.
+The local MP3 backup does not restore a remote server's cache automatically.
+Space storage/cache can be reset by restarts or redeployment; use `-Rewarm`
+after that. The server and app must request the same text/provider/voice.
+
+No extra Python packages are required by the warm-up scripts. To regenerate the
+extraction after updating the inventory, run:
+
+```powershell
+.\.venv-rvc\Scripts\python.exe .\tools\extract_textvoice_for_gwen.py
+```
+
 ## FastAPI: Gwen-TTS (Yến Nhi)
 
 [Gwen-TTS](https://github.com/ggroup-ai-lab/gwen-tts) is available on the same
@@ -148,16 +198,41 @@ in `models/gwen/worker.log`. Existing audio is cached on disk with a 32 MiB RAM
 limit; concurrent identical requests reuse one generation. GET supports ETags,
 byte ranges, and HEAD. WAV is the default format; use `format=mp3` for MP3.
 Text is normalized with `sea-g2p` and split into chunks of at most 320
-characters before inference. Edge's `rate`, `volume`, `pitch` and ZeroTTS's
+characters before inference. `volume`, `pitch` and ZeroTTS's
 `seed`/`eoa_extra_frames` do not affect Gwen.
 
-Docker/Gradio deployment payloads include the adapter and reference recordings.
-To enable synthesis there, provision the separate Gwen environment and point
-`GWEN_PYTHON` at it; the main requirements intentionally keep the existing
-transformers version. On Linux, create `.venv-gwen` with `python -m venv`,
-install CPU/CUDA PyTorch there, then install `requirements-gwen.txt` with that
-environment's Python. Merely deploying the main API does not install Gwen's
-isolated runtime.
+Gwen supports an explicit `rate` through FFmpeg `atempo` after synthesis:
+`rate=-20%` plays at 80% of the original speed; `rate=+0%` returns the original.
+Accepted values range from `-50%` to `+100%`. Omit `rate` to keep Gwen's original
+speed (the existing Edge rate defaults are not applied to Gwen). For example:
+
+```text
+/tts?provider=gwen&voice=yen_nhi&text=Xin%20chao&rate=-20%&format=mp3
+```
+
+This is audio postprocessing, not a native Gwen generation parameter. It aims
+to preserve pitch but may affect timbre or smoothness; compare samples before
+choosing a rate. FFmpeg is required for nonzero rates and is included in the
+Space/Docker system packages. The source WAV stays unchanged; processed WAVs
+are cached separately under `audio_cache/tempo`, and MP3 encoding happens
+after tempo adjustment. Rate variants reuse the same model-generated source.
+
+To make an offline listening comparison of the original, -10%, and -20% from
+one Gwen/Yến Nhi WAV, run `.venv-rvc\Scripts\python.exe tools/demo_gwen_rate.py`.
+Open `samples/gwen-rate/index.html` to listen. The script downloads one original
+from the Space and processes it locally; `--source-wav path/to/original.wav`
+reuses an existing recording. This comparison does not require redeploying.
+
+Gradio Spaces install the isolated CPU environment and download the pinned
+Gwen model before opening the API, using `setup_gwen.py` from `hf_app.py`.
+The first startup can take several minutes; follow the Space runtime logs
+until it prints `Gwen: isolated runtime and model files ready`. Failed installs
+leave no ready marker and retry on restart. Docker performs this preparation
+during the image build. Both profiles keep the API's transformers version separate.
+On other Linux hosts, run `python setup_gwen.py --download-model` once.
+`GWEN_PYTHON` can point to an existing isolated runtime; startup validates it
+without installing into that external environment. Set `GWEN_AUTO_SETUP=0`
+on a Gradio Space only when deliberately disabling automatic Gwen setup.
 
 ## FastAPI: VieNeu-TTS
 
@@ -228,6 +303,7 @@ and restart the server:
 ```python
 FORCE_VOICE_ID = True
 FIXED_VOICE_ID = "your-installed-voice-id"
+FIXED_PROVIDER = None
 ```
 
 When enabled, GET/POST `/tts`, `/vtts/synthesize`, and `/zerotts/synthesize`
@@ -238,6 +314,20 @@ Automatic routing selects ZeroTTS for a locally installed pack, otherwise V-TTS.
 routes retain their respective backends. An empty fixed ID returns HTTP 503.
 Set `FORCE_VOICE_ID = False` (the default) to accept client voice IDs again.
 Voice registration and reference-audio cloning keep their existing behavior.
+
+Set `FIXED_PROVIDER` to `edge`, `vtts`, `zerotts`, `vieneu`, or `gwen` to
+force the provider as well on GET/POST/HEAD `/tts` while `FORCE_VOICE_ID` is
+enabled. For example, to always use Gwen/Yến Nhi:
+
+```python
+FORCE_VOICE_ID = True
+FIXED_VOICE_ID = "yen_nhi"
+FIXED_PROVIDER = "gwen"
+```
+
+`FIXED_PROVIDER = None` retains the routing described above. When
+`FORCE_VOICE_ID = False`, both fixed settings are ignored. An invalid fixed
+provider returns HTTP 503. Dedicated synthesis routes retain their backends.
 
 Register a voice once by sending its reference recording to `POST
 /vtts/voices`:
@@ -366,6 +456,177 @@ seed has its own cache entry. The same text, voice, settings, and seed reproduce
 the same reading on the same runtime; changing seed can improve one sentence
 and worsen another. Listen to the result before selecting it. This does not
 increase `min_frames`, change the text, or force extra speech after EOA.
+
+For the isolated word `Năm` (also numeric `5`) with voice
+`VpYLlCQEgcoHgycJstNP`, an omitted seed now selects the calibrated reading
+`seed=11`. In the local hidden-continuation comparison, this reading finishes
+its audible ending before the suffix cut, leaving about 80 ms for the release.
+Capitalization, Unicode accent composition and terminal punctuation are accepted.
+An explicit `seed` takes precedence. Other voices retain their defaults.
+The effective seed is part of the cache key, so the earlier default reading is
+not reused for this word. Restart the API to apply the change.
+
+The exact prompt `Trên tờ lịch này có` uses `seed=7` for this voice when no seed
+is supplied. With the default hidden continuation enabled, its internal model
+text is `Trên tờ lịch này có; Bắt đầu thôi.`. This phrase boundary gives the
+final `có` room to finish before the suffix is removed. The selected sample was
+checked with ASR and Vietnamese CTC alignment; the fade starts after the aligned
+end of `có`. Request/display text is unchanged. This rule accepts capitalization,
+accent composition and terminal punctuation, but does not match longer sentences
+or a newline that splits the phrase. Custom suffixes stay unchanged, and explicit
+seeds take precedence. The effective seed and suffix select a new cache entry.
+
+For the exact prompt `Đây là gang tay` with the same voice, the default reading
+uses `seed=7`. With the default hidden continuation enabled, the model receives
+`Đây là gang tay; Bắt đầu thôi.` to let the final `tay` finish before trimming.
+Final delivery uses 100% speed (no whole-phrase tempo adjustment), after suffix trimming or
+fallback, while preserving pitch. After verified suffix trimming, the aligned
+final word `tay` is also lengthened at 75% speed, with a 10 ms crossfade into the
+unchanged preceding speech. Only this final-word lengthening affects timing;
+the rest of the phrase retains its original speed.
+The ending calibration has its own cache version, so earlier short endings are
+not reused. The lengthened source WAV and intermediate word audio are cached
+and backed up to the configured Dataset. MP3 encoding uses the lengthened
+waveform. Capitalization, accent composition and terminal
+punctuation are accepted; longer sentences and other voices keep their speed.
+FFmpeg is required and is already included in the Space/Docker packages.
+
+### Built-in Hà My (hamy)
+
+Use the model's identifier `hamy` for Hà My:
+
+```json
+{"provider":"zerotts","voice_id":"hamy","text":"Xin chào!","format":"mp3"}
+```
+
+Send this to `POST /tts`. The direct `POST /zerotts/synthesize` endpoint uses
+the same body without `provider`. Common display spellings such as `Hà My`,
+`Ha My`, and `ha_my` are accepted and resolve to the canonical `hamy` cache key.
+The exact pinned standard model's eight built-in speakers are listed and
+recognized for automatic routing before inference downloads/loads its weights.
+The metadata catalog is ignored for a custom model or a different revision.
+
+Keep `FORCE_VOICE_ID = False` in `server.py` to choose voices per request.
+When forcing is enabled, `/tts` deliberately replaces the requested speaker and
+provider with `FIXED_VOICE_ID` and `FIXED_PROVIDER` instead.
+
+### Childlike copy of chi tham
+
+Use the separate voice ID `VpYLlCQEgcoHgycJstNP_child` for a processed,
+younger-sounding version of this speaker:
+
+```json
+{"text":"Hãy cùng khám phá nhé!","voice_id":"VpYLlCQEgcoHgycJstNP_child","format":"mp3"}
+```
+
+Send this body to `POST /zerotts/synthesize`, or add `"provider":"zerotts"`
+for `POST /tts`. The source voice and its tuned short prompts are reused before
+applying +3 semitones with resampling/tempo compensation at 100% tempo.
+Vocal resonance follows the pitch shift. This revised profile avoids the
+independent spectral-formant estimation used by the first preview.
+This is an audio effect on the original speaker, not a retrained child voice.
+It requires FFmpeg's [resampling and tempo filters](https://ffmpeg.org/ffmpeg-filters.html#atempo).
+
+The processed WAV is cached separately in `voice_color/` and backed up under
+`audio/voice_color/` in the configured private Dataset. MP3 delivery keeps its
+existing separate cache. Source cache keys remain unchanged; the new voice
+does not need another round of TTS inference for a source phrase already cached.
+Pitch/processing changes invalidate only the processed derivative. The deployment
+script also migrates local `voice_color/` files before updating the application.
+
+Run `tools/demo_zerotts_child.py` with the existing warmup downloads to produce
+three comparison samples from the cached source WAV under `samples/zerotts-child-v2/`
+without calling TTS. Add `--long` for `samples/zerotts-child-v2-long/`.
+
+Male childlike variants are also registered in the API:
+
+| Voice ID | Source | Pitch | Tempo |
+| --- | --- | --- | --- |
+| `quangminh_child` | `quangminh` | +5 semitones | 100% |
+| `tiendat_child` | `tiendat` | +4 semitones | 100% |
+| `quangvinh_child` | `htSzITlVXGL3s4XwNqOv` (Quang Vinh, Southern) | +4 semitones | 100% |
+
+The recommended pair is `tiendat_child` and `quangvinh_child`. The latter uses
+the public [ZeroWeight Audio Studio](https://platform.zeroweight.ai/audio)
+community voice tagged `male`, `young`, `southern`; its source pack is bundled
+so deployment needs no catalogue download. `quangminh_child` remains available
+for existing callers. Tiến Đạt's processing settings are unchanged.
+
+Use these IDs with `provider=zerotts` on `/tts` or as `voice_id` on
+`/zerotts/synthesize`. They use the same resampling/tempo compensation as the
+boy-voice previews. They reuse the original speaker's cache, retain separate
+processed WAV/MP3 caches, and follow the configured Dataset backup policy.
+The included speaker metadata is JSON-escaped for Windows SDK compatibility.
+Restart the local API after adding these packs; update application code on a
+Space before using the new IDs there.
+
+Audio responses for ZeroTTS, VieNeu, and Gwen include
+`X-Audio-Duration-Seconds` (for example `2.355`) alongside the WAV/MP3 bytes.
+This is the complete delivered clip's duration, rounded to milliseconds, and
+is also returned for cached audio, HEAD, byte ranges, and ETag revalidation.
+It is exposed through CORS, so a browser frontend can read
+`response.headers.get("X-Audio-Duration-Seconds")` before consuming
+`response.blob()`. No extra request field is needed. If duration metadata
+cannot be read from an older file, the header is omitted and playback still
+works; a browser can use `audio.duration` after `loadedmetadata` as a fallback.
+
+### Warm the chi tham voice
+
+To warm this voice's cache on `https://tranvanhung203-edge-tts-api.hf.space`, run:
+
+```powershell
+cd F:\edge-tts
+powershell -ExecutionPolicy Bypass -File .\warm_zerotts_cache.ps1
+```
+
+This uses the 1,070 concrete TextVoice strings already extracted into
+`data/gwen_cache/texts.json`; the text inventory is shared with the Gwen warmer.
+The 135 unresolved dynamic template rows are excluded. Requests run sequentially
+through `POST /zerotts/synthesize`, with the fixed voice ID above and MP3 output.
+Both the source WAV and encoded MP3 are cached by the deployed backend.
+Successful downloads and progress are saved under
+`models/zerotts_cache_warmup/VpYLlCQEgcoHgycJstNP/`. Rerun the same command to
+resume; it skips requests that previously returned valid MP3 audio. Network
+errors retry up to three times, and three consecutive failed texts stop the run.
+
+Use `-DryRun` to prepare the request list without contacting the Space, `-Limit 5`
+for a small batch, `-TextsFile path\texts.json` for another JSON array of strings,
+or `-Rewarm` to request previously successful texts again after changing the
+deployed model/settings. `-Timeout 1200` is the timeout in seconds per request.
+The equivalent Python command is `py -3.11 tools/warm_zerotts_cache.py`; it needs
+only the standard library and also supports `--help`.
+
+Deploy the latest backend first to include the `Năm` calibration and Dataset
+backup. The warmer omits `seed` so the deployed backend selects its defaults.
+A successful audio response confirms generation, not a successful Dataset
+backup; persistence across rebuilds requires the Space's audio-cache Dataset
+configuration described in [DEPLOY_HUGGINGFACE.md](DEPLOY_HUGGINGFACE.md).
+
+If backup failed but the downloaded MP3s are still on this computer, restore and
+verify the private Dataset cache without synthesizing or restarting the Space:
+
+```powershell
+.\.venv-rvc\Scripts\python.exe tools\backup_zerotts_cache.py
+```
+
+This preserves existing WAVs and restores missing WAVs by decoding the MP3s.
+The original MP3 bytes are uploaded under the matching delivery-cache keys.
+It verifies remote checksums and writes `recovery/backup-report.json` under the
+warmup output folder. See the recovery section in `DEPLOY_HUGGINGFACE.md` for
+requirements and `--dry-run`. Download progress alone does not confirm backup.
+
+The cache matches the exact text, voice and synthesis settings. For example,
+`cam, còn lại` and `cam. còn lại` use different cache entries because punctuation
+can change the spoken pauses. Keep additional exact runtime strings in
+`data/zerotts_cache/runtime_texts.json`, then warm and verify them separately:
+
+```powershell
+.\.venv-rvc\Scripts\python.exe tools\warm_zerotts_cache.py --texts data\zerotts_cache\runtime_texts.json --output models\zerotts_cache_warmup\VpYLlCQEgcoHgycJstNP\runtime_variants
+.\.venv-rvc\Scripts\python.exe tools\backup_zerotts_cache.py --output models\zerotts_cache_warmup\VpYLlCQEgcoHgycJstNP\runtime_variants
+```
+
+Recovery manifests are stored separately for each inventory so a small additional
+batch does not replace the manifest of the original text list.
 
 For an offline comparison of the reported endings, run:
 
@@ -503,8 +764,13 @@ the old original-text flow. A spelling mismatch in the original alone does
 not trigger fallback. The suffix cache version has changed so previous audio
 is not reused with the new detection behavior.
 The backend restores its random-state checkpoint before
-regenerating, and never returns the untrimmed hidden suffix. Fallback results
-are not cached under the workaround settings. Successful cache entries include
+regenerating, and never returns the untrimmed hidden suffix. Successful fallback
+audio uses the same requested voice and is cached under the active workaround
+settings, just like successfully trimmed audio. Repeated requests reuse this
+final waveform from RAM, disk, or the configured Dataset instead of rerunning
+ASR and fallback synthesis. Model failures that return no audio are not cached.
+Changing text, voice, seed or suffix settings selects a different cache entry.
+Successful cache entries include
 the suffix, model selections, cut settings, and local model fingerprints.
 
 The alignment model used for this experiment is licensed **CC BY-NC 4.0**;

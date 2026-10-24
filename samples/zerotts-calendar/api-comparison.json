@@ -1,0 +1,42 @@
+[
+  {
+    "file": "before.wav",
+    "options": {},
+    "duration": 1.7125416666666666
+  },
+  {
+    "file": "tail4.wav",
+    "options": {
+      "eoa_extra_frames": 4
+    },
+    "duration": 1.7125416666666666
+  },
+  {
+    "file": "seed1.wav",
+    "options": {
+      "seed": 1
+    },
+    "duration": 1.6126458333333333
+  },
+  {
+    "file": "seed7.wav",
+    "options": {
+      "seed": 7
+    },
+    "duration": 1.5919791666666667
+  },
+  {
+    "file": "seed11.wav",
+    "options": {
+      "seed": 11
+    },
+    "duration": 1.5328125
+  },
+  {
+    "file": "seed42.wav",
+    "options": {
+      "seed": 42
+    },
+    "duration": 1.3911875
+  }
+]

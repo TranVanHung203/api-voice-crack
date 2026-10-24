@@ -1,0 +1,28 @@
+[
+  {
+    "file": "before.wav",
+    "options": {},
+    "duration": 0.8297083333333334
+  },
+  {
+    "file": "seed1.wav",
+    "options": {
+      "seed": 1
+    },
+    "duration": 0.80925
+  },
+  {
+    "file": "seed11.wav",
+    "options": {
+      "seed": 11
+    },
+    "duration": 0.8197916666666667
+  },
+  {
+    "file": "seed28.wav",
+    "options": {
+      "seed": 28
+    },
+    "duration": 0.5890625
+  }
+]

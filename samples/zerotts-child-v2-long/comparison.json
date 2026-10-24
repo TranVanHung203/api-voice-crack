@@ -1,0 +1,26 @@
+{
+  "text": "Vẫn còn một chú thỏ chưa có cà rốt. Vì sao vậy nhỉ? Chúng ta hãy cùng khám phá nhé!",
+  "source_voice_id": "VpYLlCQEgcoHgycJstNP",
+  "source": "dataset-wav",
+  "algorithm": "resample_atempo_v2",
+  "profiles": [
+    {
+      "name": "soft",
+      "pitch_semitones": 2.5,
+      "formant_ratio": null,
+      "seconds": 6.569625
+    },
+    {
+      "name": "child",
+      "pitch_semitones": 3.0,
+      "formant_ratio": null,
+      "seconds": 6.5670625
+    },
+    {
+      "name": "higher",
+      "pitch_semitones": 4.0,
+      "formant_ratio": null,
+      "seconds": 6.575333333333333
+    }
+  ]
+}

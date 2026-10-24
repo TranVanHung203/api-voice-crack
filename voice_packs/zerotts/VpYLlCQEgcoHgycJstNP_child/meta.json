@@ -1,0 +1,19 @@
+{
+  "name": "VpYLlCQEgcoHgycJstNP_child",
+  "display_name": "Ch\u1ecb Th\u1eafm \u2013 gi\u1ecdng tr\u1ebb h\u00f3a",
+  "language": "vi",
+  "description": "B\u1ea3n x\u1eed l\u00fd cao \u0111\u1ed9 v\u00e0 \u00e2m s\u1eafc t\u1eeb gi\u1ecdng ch\u1ecb Th\u1eafm, phong c\u00e1ch tr\u1ebb em. Kh\u00f4ng ph\u1ea3i b\u1ea3n thu c\u1ee7a tr\u1ebb em.",
+  "tags": [
+    "female",
+    "southern",
+    "childlike",
+    "processed"
+  ],
+  "source_voice_id": "VpYLlCQEgcoHgycJstNP",
+  "delivery": {
+    "pitch_semitones": 3.0,
+    "formant_mode": "follow_pitch",
+    "algorithm": "resample_atempo_v2",
+    "tempo": 1.0
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "text": "Hãy cùng khám phá nhé!",
+  "source_voice_id": "VpYLlCQEgcoHgycJstNP",
+  "source": "dataset-wav",
+  "algorithm": "resample_atempo_v2",
+  "profiles": [
+    {
+      "name": "soft",
+      "pitch_semitones": 2.5,
+      "formant_ratio": null,
+      "seconds": 1.80475
+    },
+    {
+      "name": "child",
+      "pitch_semitones": 3.0,
+      "formant_ratio": null,
+      "seconds": 1.8004791666666666
+    },
+    {
+      "name": "higher",
+      "pitch_semitones": 4.0,
+      "formant_ratio": null,
+      "seconds": 1.8029166666666667
+    }
+  ]
+}

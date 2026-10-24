@@ -62,3 +62,21 @@ def test_seeds_generate_distinct_cached_audio_and_restore_rng(monkeypatch, tmp_p
     after = np.random.get_state()
     np.testing.assert_array_equal(before[1], after[1])
     assert before[2:] == after[2:]
+
+
+@pytest.mark.parametrize("text,seed", [("Năm", 11), ("Trên tờ lịch này có", 7), ("Đây là gang tay", 7)])
+def test_prompt_default_matches_calibrated_seed_in_real_generation_path(monkeypatch, text, seed):
+    monkeypatch.delenv("ZEROTTS_ENABLE_HIDDEN_SUFFIX", raising=False)
+    backend = ZeroTTSBackend()
+    monkeypatch.setattr(backend, "_load_engine", lambda: SimpleNamespace(
+        sample_rate=48_000,
+        synthesize=lambda *a, **k: np.random.random((1, 4800)).astype(np.float32),
+    ))
+    voice = "VpYLlCQEgcoHgycJstNP"
+    before = np.random.get_state()
+    tuned = backend._synthesize_uncached(text, voice)
+    assert tuned == backend._synthesize_uncached(text, voice, seed=seed)
+    assert tuned != backend._synthesize_uncached(text, voice, seed=23011110)
+    after = np.random.get_state()
+    np.testing.assert_array_equal(before[1], after[1])
+    assert before[2:] == after[2:]

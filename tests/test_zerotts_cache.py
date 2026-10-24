@@ -101,3 +101,39 @@ def test_failed_synthesis_is_not_cached(backend, monkeypatch):
         backend.synthesize_wav("Xin chao", "hamy")
     assert not backend._audio_cache
     assert not list(backend._audio_cache_dir().glob("*.wav"))
+
+
+@pytest.mark.parametrize("text", ["Năm", "năm.", "NĂM!", "  Năm?  ", "Na\u0306m", "5"])
+def test_nam_tuning_bypasses_old_cache_and_respects_explicit_seed(backend, monkeypatch, text):
+    voice = "VpYLlCQEgcoHgycJstNP"
+    baseline = backend._encode_wav(np.zeros(4800), 48_000)
+    tuned = backend._encode_wav(np.ones(4800) * 0.1, 48_000)
+    calls = []
+    options = dict(cfg_scale=1.0, audio_temperature=0.8, audio_repetition_penalty=1.2,
+                   max_chunk_sec=15.0, max_frames=1500, eoa_extra_frames=1)
+    directory = backend._audio_cache_dir()
+    directory.mkdir(parents=True, exist_ok=True)
+    # Simulate the previously cached default reading.
+    (directory / f"{backend._audio_cache_key(text.strip(), voice, options)}.wav").write_bytes(baseline)
+    monkeypatch.setattr(backend, "_synthesize_uncached", lambda *a, **k: calls.append(k) or tuned)
+    assert backend.synthesize_wav(text, voice) == tuned
+    assert calls[0]["seed"] == 11
+    assert backend.synthesize_wav(text, voice, seed=11) == tuned
+    assert len(calls) == 1
+    backend.synthesize_wav(text, voice, seed=7)
+    assert calls[-1]["seed"] == 7
+
+
+@pytest.mark.parametrize("text,voice", [
+    ("Năm", "hamy"), ("Ba", "VpYLlCQEgcoHgycJstNP"),
+    ("Có năm con cá.", "VpYLlCQEgcoHgycJstNP"),
+    ("Một, hai, ba, bốn, năm.", "VpYLlCQEgcoHgycJstNP"),
+    ("Trên tờ lịch này có", "hamy"),
+    ("Trên tờ lịch này có Thứ Ba, ngày 12.", "VpYLlCQEgcoHgycJstNP"),
+])
+def test_nam_tuning_keeps_other_default_readings(backend, monkeypatch, text, voice):
+    calls = []
+    wav = backend._encode_wav(np.zeros(4800), 48_000)
+    monkeypatch.setattr(backend, "_synthesize_uncached", lambda *a, **k: calls.append(k) or wav)
+    backend.synthesize_wav(text, voice)
+    assert "seed" not in calls[0]

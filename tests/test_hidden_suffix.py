@@ -120,6 +120,91 @@ def test_short_word_pause_respects_custom_suffix_and_disabled_flow(monkeypatch):
     assert [c[0] for c in calls] == ["Năm."]
 
 
+@pytest.mark.parametrize("text", [
+    "Trên tờ lịch này có", "TRÊN TỜ LỊCH NÀY CÓ!", "  Trên tờ lịch này có.  ",
+    "Tre\u0302n tờ lịch này có", "Trên  tờ lịch này có",
+])
+def test_calendar_prompt_pauses_before_suffix_and_reuses_cache(monkeypatch, tmp_path, text):
+    backend, calls = fake_backend(monkeypatch, lambda *a: boundary())
+    monkeypatch.setattr(backend, "_audio_cache_dir", lambda: tmp_path)
+    monkeypatch.setenv("ZEROTTS_ENABLE_HIDDEN_SUFFIX", "1")
+    first = backend.synthesize_wav(text, "VpYLlCQEgcoHgycJstNP")
+    assert len(calls) == 1
+    assert calls[0][0].endswith("có; Bắt đầu thôi.") or calls[0][0].endswith("CÓ; Bắt đầu thôi.")
+    assert calls[0][1]["voice"] == "VpYLlCQEgcoHgycJstNP"
+    assert backend.synthesize_wav(text, "VpYLlCQEgcoHgycJstNP") == first
+    assert len(calls) == 1
+
+
+def test_calendar_tuning_ignores_old_period_cache_and_keeps_custom_suffix(monkeypatch, tmp_path):
+    from zerotts_backend import _effective_suffix_config
+
+    backend = ZeroTTSBackend()
+    monkeypatch.setattr(backend, "_audio_cache_dir", lambda: tmp_path)
+    monkeypatch.setenv("ZEROTTS_ENABLE_HIDDEN_SUFFIX", "1")
+    voice = "VpYLlCQEgcoHgycJstNP"
+    text = "Trên tờ lịch này có"
+    settings = dict(cfg_scale=1.0, audio_temperature=0.8, audio_repetition_penalty=1.2,
+                    max_chunk_sec=15.0, max_frames=1500, eoa_extra_frames=1)
+    old_options = {**settings, "seed": 7, "hidden_suffix_config": HiddenSuffixConfig.from_env().cache_options()}
+    old = backend._encode_wav(waveform() * .5, 48000)
+    (tmp_path / f"{backend._audio_cache_key(text, voice, old_options)}.wav").write_bytes(old)
+    calls = []
+    new = backend._encode_wav(waveform(), 48000)
+    monkeypatch.setattr(backend, "_synthesize_uncached", lambda *a, **k: calls.append(k) or new)
+    assert backend.synthesize_wav(text, voice, seed=7) == new
+    assert calls[0]["seed"] == 7
+    assert calls[0]["hidden_suffix_config"]["suffix"] == "; Bắt đầu thôi."
+    # Default calibration shares the explicit seed=7 cache, never the old suffix.
+    assert backend.synthesize_wav(text, voice) == new
+    assert len(calls) == 1
+    assert backend.synthesize_wav(text, voice, seed=11) == new
+    assert len(calls) == 2
+    assert calls[-1]["seed"] == 11
+    custom = HiddenSuffixConfig(enabled=True, suffix=".Tiếp tục.")
+    assert _effective_suffix_config(text, voice, custom) == custom
+    disabled = HiddenSuffixConfig(enabled=False)
+    assert _effective_suffix_config(text, voice, disabled) == disabled
+
+
+@pytest.mark.parametrize("text,voice", [
+    ("Trên tờ lịch này có", "hamy"),
+    ("Trên tờ lịch này có Thứ Ba, ngày 12.", "VpYLlCQEgcoHgycJstNP"),
+    ("Trong cuốn lịch có nhiều tờ lịch.", "VpYLlCQEgcoHgycJstNP"),
+    ("Trên tờ lịch\nnày có", "VpYLlCQEgcoHgycJstNP"),
+])
+def test_calendar_tuning_preserves_other_voices_and_sentences(text, voice):
+    from zerotts_backend import _effective_suffix_config
+
+    config = HiddenSuffixConfig(enabled=True)
+    assert _effective_suffix_config(text, voice, config) == config
+
+
+def test_handspan_trims_after_tay_then_slows_the_complete_phrase(monkeypatch, tmp_path):
+    aligned = [{"word": "tay", "start": .1, "end": .62},
+               {"word": "bắt"}, {"word": "đầu"}, {"word": "thôi"}]
+    point = SuffixBoundary(.8, .8, .62, aligned, "Đây là gang tay bắt đầu thôi")
+    backend, calls = fake_backend(monkeypatch, lambda *a: point)
+    monkeypatch.setattr(backend, "_audio_cache_dir", lambda: tmp_path)
+    monkeypatch.setenv("ZEROTTS_ENABLE_HIDDEN_SUFFIX", "1")
+    expected, metadata = cut_at_boundary(waveform(), 48000, point, HiddenSuffixConfig())
+    protected_samples = round(point.prefix_end * 48000)
+    np.testing.assert_array_equal(expected[:protected_samples], waveform()[:protected_samples])
+    extended = np.r_[expected, np.zeros(4800, dtype=np.float32)]
+    stretching = []
+    monkeypatch.setattr(backend, "_lengthen_final_word", lambda audio, sr, start: stretching.append((audio.copy(), sr, start)) or extended)
+    complete = backend._encode_wav(extended, 48000)
+    slower = backend._encode_wav(waveform(), 48000)
+    processed = []
+    monkeypatch.setattr("tts_delivery.change_wav_tempo", lambda wav, tempo, directory: processed.append((wav, tempo)) or slower)
+    assert backend.synthesize_wav("Đây là gang tay", "VpYLlCQEgcoHgycJstNP") == slower
+    assert [text for text, _ in calls] == ["Đây là gang tay; Bắt đầu thôi."]
+    assert processed == [(complete, 1.0)]
+    np.testing.assert_array_equal(stretching[0][0], expected)
+    assert stretching[0][1:] == (48000, .1)
+    assert metadata["cut_point"] - .015 > point.prefix_end
+
+
 def test_failure_regenerates_legacy_audio_with_same_rng(monkeypatch, caplog):
     backend = ZeroTTSBackend()
     monkeypatch.setattr(backend, "_load_engine", lambda: SimpleNamespace(
@@ -171,21 +256,61 @@ def test_cache_separates_workaround_and_suffix_settings(monkeypatch, tmp_path):
     assert len(list(tmp_path.glob("*.wav"))) == 3
 
 
-def test_fallback_is_not_cached(monkeypatch, tmp_path):
+def test_missing_suffix_fallback_is_cached_in_ram_disk_and_backed_up(monkeypatch, tmp_path):
+    backend = ZeroTTSBackend()
+    monkeypatch.setenv("ZEROTTS_ENABLE_HIDDEN_SUFFIX", "1")
+    monkeypatch.setattr(ZeroTTSBackend, "_audio_cache_dir", classmethod(lambda cls: tmp_path))
+    calls, detections, backups = [], [], []
+    original = waveform()
+
+    def generate(text, **options):
+        calls.append((text, options))
+        return original if text == "Original." else original * 0.5
+
+    def missing_suffix(*args):
+        detections.append(True)
+        raise SuffixDetectionError("ASR did not find the complete trailing suffix")
+
+    backend._suffix_detector = SimpleNamespace(model_name="small", detect=missing_suffix)
+    monkeypatch.setattr(backend, "_load_engine", lambda: SimpleNamespace(sample_rate=48000, synthesize=generate))
+    monkeypatch.setattr(backend, "_shorten_tail_pause", lambda audio, *args: audio)
+    monkeypatch.setattr("zerotts_backend.backup_audio", lambda path, provider, audio: backups.append((path, provider, audio)))
+    expected = backend._encode_wav(original, 48000)
+    first = backend.synthesize_wav("Original.", "hamy")
+    assert first == expected
+    assert backend._suffix_fallback_used
+    assert [text for text, _ in calls] == ["Original.Bắt đầu thôi.", "Original."]
+    assert all(options["voice"] == "hamy" for _, options in calls)
+    assert len(detections) == 1
+    assert backend.synthesize_wav("Original.", "hamy") == first
+    assert len(calls) == 2 and len(detections) == 1
+    assert len(backend._audio_cache) == 1
+    paths = list(tmp_path.glob("*.wav"))
+    assert len(paths) == 1 and paths[0].read_bytes() == first
+    assert backups == [(paths[0], "zerotts", first)]
+    restarted = ZeroTTSBackend()
+    monkeypatch.setattr(restarted, "_load_engine", lambda: pytest.fail("Disk hit must not run inference or ASR"))
+    assert restarted.synthesize_wav("Original.", "hamy") == first
+
+
+def test_failed_fallback_synthesis_is_never_cached(monkeypatch, tmp_path):
     backend = ZeroTTSBackend()
     monkeypatch.setenv("ZEROTTS_ENABLE_HIDDEN_SUFFIX", "1")
     monkeypatch.setattr(backend, "_audio_cache_dir", lambda: tmp_path)
-    calls = []
 
-    def generate(*a, **k):
-        backend._suffix_fallback_used = True
-        calls.append(k)
-        return backend._encode_wav(waveform(), 48000)
+    def generate(text, **options):
+        if text == "Original.":
+            raise RuntimeError("Fallback model failed")
+        return waveform()
 
-    monkeypatch.setattr(backend, "_synthesize_uncached", generate)
-    backend.synthesize_wav("Original.", "hamy")
-    backend.synthesize_wav("Original.", "hamy")
-    assert len(calls) == 2
+    def missing_suffix(*args):
+        raise SuffixDetectionError("No trailing suffix")
+
+    backend._suffix_detector = SimpleNamespace(model_name="small", detect=missing_suffix)
+    monkeypatch.setattr(backend, "_load_engine", lambda: SimpleNamespace(sample_rate=48000, synthesize=generate))
+    monkeypatch.setattr("zerotts_backend.backup_audio", lambda *args: pytest.fail("Failed audio must not be backed up"))
+    with pytest.raises(RuntimeError, match="Fallback model failed"):
+        backend.synthesize_wav("Original.", "hamy")
     assert not backend._audio_cache
     assert not list(tmp_path.glob("*.wav"))
 

@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import tempfile
 import threading
+from audio_cache_store import backup_audio, read_audio
 
 
 class VieNeuBackendError(RuntimeError):
@@ -81,7 +82,11 @@ class VieNeuBackend:
                 return self._audio_cache[key]
             path = self.audio_cache_dir() / f"{key}.wav"
             try:
-                cached = path.read_bytes()
+                cached = read_audio(path, "vieneu")
+                # Invalidate only the confirmed defective My Duyen apple clip.
+                if hashlib.sha256(cached).hexdigest() == "99a7c5541db1712e11ff33e5312202392555c16a601b3061f1de1a83b4fcce53":
+                    path.unlink(missing_ok=True)
+                    raise FileNotFoundError(path)
                 if len(cached) > 44 and cached[:4] == b"RIFF" and cached[8:12] == b"WAVE":
                     return self._remember(key, cached)
             except OSError:
@@ -120,6 +125,7 @@ class VieNeuBackend:
                         temporary.unlink(missing_ok=True)
                     except OSError:
                         pass
+            backup_audio(path, "vieneu", encoded)
             return self._remember(key, encoded)
 
 

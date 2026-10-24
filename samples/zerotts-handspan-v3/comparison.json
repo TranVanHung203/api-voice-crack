@@ -1,0 +1,717 @@
+[
+  {
+    "variant": "seed1",
+    "status": "trimmed",
+    "suffix_start": 1.191919191919192,
+    "asr_start": 1.0,
+    "protected_prefix_end": 1.0303030303030305,
+    "cut_point": 1.1718541666666666,
+    "before_duration": 2.0,
+    "after_duration": 1.1718541666666666,
+    "recognized_text": " Đây là gian tay bắt đầu thôi.",
+    "aligned_words": [
+      {
+        "word": "đây",
+        "start": 0.08080808080808081,
+        "end": 0.20202020202020204,
+        "probability": 0.995618462562561
+      },
+      {
+        "word": "là",
+        "start": 0.38383838383838387,
+        "end": 0.5050505050505051,
+        "probability": 0.999241054058075
+      },
+      {
+        "word": "gian",
+        "start": 0.6060606060606061,
+        "end": 0.7474747474747475,
+        "probability": 0.7467897774185985
+      },
+      {
+        "word": "tay",
+        "start": 0.8686868686868687,
+        "end": 1.0303030303030305,
+        "probability": 0.9909988244374593
+      },
+      {
+        "word": "bắt",
+        "start": 1.191919191919192,
+        "end": 1.272727272727273,
+        "probability": 0.99884432554245
+      },
+      {
+        "word": "đầu",
+        "start": 1.373737373737374,
+        "end": 1.5151515151515154,
+        "probability": 0.9994097948074341
+      },
+      {
+        "word": "thôi",
+        "start": 1.6363636363636365,
+        "end": 1.8383838383838385,
+        "probability": 0.9991767108440399
+      }
+    ],
+    "cut_method": "ctc_timestamp_zero_crossing",
+    "detection": {
+      "recognized_text": " Đây là gian tay bắt đầu thôi.",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.0,
+          1.3,
+          0.9558682143688202
+        ],
+        [
+          "đầu",
+          1.3,
+          1.54,
+          0.9995537400245667
+        ],
+        [
+          "thôi",
+          1.54,
+          1.8,
+          0.9915074110031128
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "đây",
+        "là",
+        "gian",
+        "tay"
+      ],
+      "alignment_context": [
+        "đây",
+        "là",
+        "gian",
+        "tay"
+      ],
+      "ctc_recognized_text": "đây là gan tay bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "đây",
+          "start": 0.08080808080808081,
+          "end": 0.20202020202020204,
+          "probability": 0.995618462562561
+        },
+        {
+          "word": "là",
+          "start": 0.38383838383838387,
+          "end": 0.5050505050505051,
+          "probability": 0.999241054058075
+        },
+        {
+          "word": "gian",
+          "start": 0.6060606060606061,
+          "end": 0.7474747474747475,
+          "probability": 0.7467897774185985
+        },
+        {
+          "word": "tay",
+          "start": 0.8686868686868687,
+          "end": 1.0303030303030305,
+          "probability": 0.9909988244374593
+        },
+        {
+          "word": "bắt",
+          "start": 1.191919191919192,
+          "end": 1.272727272727273,
+          "probability": 0.99884432554245
+        },
+        {
+          "word": "đầu",
+          "start": 1.373737373737374,
+          "end": 1.5151515151515154,
+          "probability": 0.9994097948074341
+        },
+        {
+          "word": "thôi",
+          "start": 1.6363636363636365,
+          "end": 1.8383838383838385,
+          "probability": 0.9991767108440399
+        }
+      ],
+      "asr_final_word": [
+        "tay",
+        0.8,
+        1.0,
+        0.9831835031509399
+      ]
+    }
+  },
+  {
+    "variant": "seed19",
+    "status": "trimmed",
+    "suffix_start": 1.552941176470588,
+    "asr_start": 1.36,
+    "protected_prefix_end": 1.3714285714285712,
+    "cut_point": 1.5329375,
+    "before_duration": 2.4,
+    "after_duration": 1.5329375,
+    "recognized_text": " Đây là gian tay bắt đầu thôi",
+    "aligned_words": [
+      {
+        "word": "đây",
+        "start": 0.5042016806722689,
+        "end": 0.6252100840336133,
+        "probability": 0.9948072830835978
+      },
+      {
+        "word": "là",
+        "start": 0.7462184873949579,
+        "end": 0.8470588235294116,
+        "probability": 0.9991088807582855
+      },
+      {
+        "word": "gian",
+        "start": 0.9277310924369747,
+        "end": 1.06890756302521,
+        "probability": 0.7477225628535962
+      },
+      {
+        "word": "tay",
+        "start": 1.1899159663865544,
+        "end": 1.3714285714285712,
+        "probability": 0.9929266571998596
+      },
+      {
+        "word": "bắt",
+        "start": 1.552941176470588,
+        "end": 1.653781512605042,
+        "probability": 0.998991847038269
+      },
+      {
+        "word": "đầu",
+        "start": 1.7344537815126049,
+        "end": 1.8756302521008401,
+        "probability": 0.9995238383611044
+      },
+      {
+        "word": "thôi",
+        "start": 1.9966386554621847,
+        "end": 2.2386554621848735,
+        "probability": 0.9993575066328049
+      }
+    ],
+    "cut_method": "low_energy_zero_crossing",
+    "detection": {
+      "recognized_text": " Đây là gian tay bắt đầu thôi",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.36,
+          1.68,
+          0.8040693402290344
+        ],
+        [
+          "đầu",
+          1.68,
+          1.9,
+          0.9996199607849121
+        ],
+        [
+          "thôi",
+          1.9,
+          2.16,
+          0.9863341450691223
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "đây",
+        "là",
+        "gian",
+        "tay"
+      ],
+      "alignment_context": [
+        "đây",
+        "là",
+        "gian",
+        "tay"
+      ],
+      "ctc_recognized_text": "đây là gan tay bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "đây",
+          "start": 0.5042016806722689,
+          "end": 0.6252100840336133,
+          "probability": 0.9948072830835978
+        },
+        {
+          "word": "là",
+          "start": 0.7462184873949579,
+          "end": 0.8470588235294116,
+          "probability": 0.9991088807582855
+        },
+        {
+          "word": "gian",
+          "start": 0.9277310924369747,
+          "end": 1.06890756302521,
+          "probability": 0.7477225628535962
+        },
+        {
+          "word": "tay",
+          "start": 1.1899159663865544,
+          "end": 1.3714285714285712,
+          "probability": 0.9929266571998596
+        },
+        {
+          "word": "bắt",
+          "start": 1.552941176470588,
+          "end": 1.653781512605042,
+          "probability": 0.998991847038269
+        },
+        {
+          "word": "đầu",
+          "start": 1.7344537815126049,
+          "end": 1.8756302521008401,
+          "probability": 0.9995238383611044
+        },
+        {
+          "word": "thôi",
+          "start": 1.9966386554621847,
+          "end": 2.2386554621848735,
+          "probability": 0.9993575066328049
+        }
+      ],
+      "asr_final_word": [
+        "tay",
+        1.12,
+        1.36,
+        0.9853230714797974
+      ]
+    }
+  },
+  {
+    "variant": "seed28",
+    "status": "trimmed",
+    "suffix_start": 1.8939259259259262,
+    "asr_start": 1.7,
+    "protected_prefix_end": 1.7125925925925929,
+    "cut_point": 1.8739375,
+    "before_duration": 2.72,
+    "after_duration": 1.8739375,
+    "recognized_text": " Đây là gang tay bắt đầu thôi",
+    "aligned_words": [
+      {
+        "word": "đây",
+        "start": 0.5037037037037038,
+        "end": 0.6245925925925927,
+        "probability": 0.9972973267237345
+      },
+      {
+        "word": "là",
+        "start": 0.7656296296296298,
+        "end": 0.9671111111111113,
+        "probability": 0.9992735087871552
+      },
+      {
+        "word": "gang",
+        "start": 1.1685925925925928,
+        "end": 1.3902222222222225,
+        "probability": 0.8270686939358711
+      },
+      {
+        "word": "tay",
+        "start": 1.5715555555555558,
+        "end": 1.7125925925925929,
+        "probability": 0.9974994858105978
+      },
+      {
+        "word": "bắt",
+        "start": 1.8939259259259262,
+        "end": 1.9745185185185188,
+        "probability": 0.9987542827924093
+      },
+      {
+        "word": "đầu",
+        "start": 2.0752592592592594,
+        "end": 2.2162962962962967,
+        "probability": 0.9995060960451762
+      },
+      {
+        "word": "thôi",
+        "start": 2.3371851851851857,
+        "end": 2.558814814814815,
+        "probability": 0.9985814839601517
+      }
+    ],
+    "cut_method": "ctc_timestamp_zero_crossing",
+    "detection": {
+      "recognized_text": " Đây là gang tay bắt đầu thôi",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.7,
+          2.0,
+          0.964830607175827
+        ],
+        [
+          "đầu",
+          2.0,
+          2.26,
+          0.9992803931236267
+        ],
+        [
+          "thôi",
+          2.26,
+          2.52,
+          0.9797425866127014
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "đây",
+        "là",
+        "gang",
+        "tay"
+      ],
+      "alignment_context": [
+        "đây",
+        "là",
+        "gang",
+        "tay"
+      ],
+      "ctc_recognized_text": "đây là gan tay bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "đây",
+          "start": 0.5037037037037038,
+          "end": 0.6245925925925927,
+          "probability": 0.9972973267237345
+        },
+        {
+          "word": "là",
+          "start": 0.7656296296296298,
+          "end": 0.9671111111111113,
+          "probability": 0.9992735087871552
+        },
+        {
+          "word": "gang",
+          "start": 1.1685925925925928,
+          "end": 1.3902222222222225,
+          "probability": 0.8270686939358711
+        },
+        {
+          "word": "tay",
+          "start": 1.5715555555555558,
+          "end": 1.7125925925925929,
+          "probability": 0.9974994858105978
+        },
+        {
+          "word": "bắt",
+          "start": 1.8939259259259262,
+          "end": 1.9745185185185188,
+          "probability": 0.9987542827924093
+        },
+        {
+          "word": "đầu",
+          "start": 2.0752592592592594,
+          "end": 2.2162962962962967,
+          "probability": 0.9995060960451762
+        },
+        {
+          "word": "thôi",
+          "start": 2.3371851851851857,
+          "end": 2.558814814814815,
+          "probability": 0.9985814839601517
+        }
+      ],
+      "asr_final_word": [
+        "tay",
+        1.36,
+        1.7,
+        0.9764382243156433
+      ]
+    }
+  },
+  {
+    "variant": "seed42",
+    "status": "trimmed",
+    "suffix_start": 1.3520720720720723,
+    "asr_start": 1.06,
+    "protected_prefix_end": 1.0695495495495497,
+    "cut_point": 1.2976458333333334,
+    "before_duration": 2.24,
+    "after_duration": 1.2976458333333334,
+    "recognized_text": " Đây là gian tay bắt đầu thôi.",
+    "aligned_words": [
+      {
+        "word": "đây",
+        "start": 0.06054054054054055,
+        "end": 0.18162162162162165,
+        "probability": 0.9987674752871195
+      },
+      {
+        "word": "là",
+        "start": 0.3430630630630631,
+        "end": 0.42378378378378384,
+        "probability": 0.9969990849494934
+      },
+      {
+        "word": "gian",
+        "start": 0.544864864864865,
+        "end": 0.7063063063063064,
+        "probability": 0.7476400050072698
+      },
+      {
+        "word": "tay",
+        "start": 0.8677477477477479,
+        "end": 1.0695495495495497,
+        "probability": 0.9912828803062439
+      },
+      {
+        "word": "bắt",
+        "start": 1.3520720720720723,
+        "end": 1.432792792792793,
+        "probability": 0.999155600865682
+      },
+      {
+        "word": "đầu",
+        "start": 1.553873873873874,
+        "end": 1.7153153153153156,
+        "probability": 0.9995476007461548
+      },
+      {
+        "word": "thôi",
+        "start": 1.8363963963963965,
+        "end": 2.0785585585585586,
+        "probability": 0.9997296184301376
+      }
+    ],
+    "cut_method": "low_energy_zero_crossing",
+    "detection": {
+      "recognized_text": " Đây là gian tay bắt đầu thôi.",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.06,
+          1.48,
+          0.7053407579660416
+        ],
+        [
+          "đầu",
+          1.48,
+          1.74,
+          0.9996356964111328
+        ],
+        [
+          "thôi",
+          1.74,
+          2.02,
+          0.9831410646438599
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "đây",
+        "là",
+        "gian",
+        "tay"
+      ],
+      "alignment_context": [
+        "đây",
+        "là",
+        "gian",
+        "tay"
+      ],
+      "ctc_recognized_text": "đây là gang tay bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "đây",
+          "start": 0.06054054054054055,
+          "end": 0.18162162162162165,
+          "probability": 0.9987674752871195
+        },
+        {
+          "word": "là",
+          "start": 0.3430630630630631,
+          "end": 0.42378378378378384,
+          "probability": 0.9969990849494934
+        },
+        {
+          "word": "gian",
+          "start": 0.544864864864865,
+          "end": 0.7063063063063064,
+          "probability": 0.7476400050072698
+        },
+        {
+          "word": "tay",
+          "start": 0.8677477477477479,
+          "end": 1.0695495495495497,
+          "probability": 0.9912828803062439
+        },
+        {
+          "word": "bắt",
+          "start": 1.3520720720720723,
+          "end": 1.432792792792793,
+          "probability": 0.999155600865682
+        },
+        {
+          "word": "đầu",
+          "start": 1.553873873873874,
+          "end": 1.7153153153153156,
+          "probability": 0.9995476007461548
+        },
+        {
+          "word": "thôi",
+          "start": 1.8363963963963965,
+          "end": 2.0785585585585586,
+          "probability": 0.9997296184301376
+        }
+      ],
+      "asr_final_word": [
+        "tay",
+        0.76,
+        1.06,
+        0.9861564636230469
+      ]
+    }
+  },
+  {
+    "variant": "comma7",
+    "status": "trimmed",
+    "suffix_start": 1.331891891891892,
+    "asr_start": 1.32,
+    "protected_prefix_end": 1.0090090090090091,
+    "cut_point": 1.3043958333333334,
+    "before_duration": 2.24,
+    "after_duration": 1.3043958333333334,
+    "recognized_text": " Đây là gang tay, bắt đầu thôi.",
+    "aligned_words": [
+      {
+        "word": "đây",
+        "start": 0.10090090090090091,
+        "end": 0.221981981981982,
+        "probability": 0.9975583155949911
+      },
+      {
+        "word": "là",
+        "start": 0.3430630630630631,
+        "end": 0.4641441441441442,
+        "probability": 0.9990818500518799
+      },
+      {
+        "word": "gang",
+        "start": 0.565045045045045,
+        "end": 0.7264864864864866,
+        "probability": 0.7917996160686016
+      },
+      {
+        "word": "tay",
+        "start": 0.8475675675675677,
+        "end": 1.0090090090090091,
+        "probability": 0.9742340246836344
+      },
+      {
+        "word": "bắt",
+        "start": 1.331891891891892,
+        "end": 1.432792792792793,
+        "probability": 0.9982272187868754
+      },
+      {
+        "word": "đầu",
+        "start": 1.553873873873874,
+        "end": 1.6951351351351354,
+        "probability": 0.9992378155390421
+      },
+      {
+        "word": "thôi",
+        "start": 1.8162162162162163,
+        "end": 2.0583783783783787,
+        "probability": 0.9994331002235413
+      }
+    ],
+    "cut_method": "low_energy_zero_crossing",
+    "detection": {
+      "recognized_text": " Đây là gang tay, bắt đầu thôi.",
+      "asr_suffix_words": [
+        [
+          "bắt",
+          1.32,
+          1.48,
+          0.8950243294239044
+        ],
+        [
+          "đầu",
+          1.48,
+          1.74,
+          0.9998329877853394
+        ],
+        [
+          "thôi",
+          1.74,
+          2.02,
+          0.9884859323501587
+        ]
+      ],
+      "validation": "suffix_only",
+      "recognized_prefix": [
+        "đây",
+        "là",
+        "gang",
+        "tay"
+      ],
+      "alignment_context": [
+        "đây",
+        "là",
+        "gang",
+        "tay"
+      ],
+      "ctc_recognized_text": "đây là gan tay bắt đầu thôi",
+      "aligned_words": [
+        {
+          "word": "đây",
+          "start": 0.10090090090090091,
+          "end": 0.221981981981982,
+          "probability": 0.9975583155949911
+        },
+        {
+          "word": "là",
+          "start": 0.3430630630630631,
+          "end": 0.4641441441441442,
+          "probability": 0.9990818500518799
+        },
+        {
+          "word": "gang",
+          "start": 0.565045045045045,
+          "end": 0.7264864864864866,
+          "probability": 0.7917996160686016
+        },
+        {
+          "word": "tay",
+          "start": 0.8475675675675677,
+          "end": 1.0090090090090091,
+          "probability": 0.9742340246836344
+        },
+        {
+          "word": "bắt",
+          "start": 1.331891891891892,
+          "end": 1.432792792792793,
+          "probability": 0.9982272187868754
+        },
+        {
+          "word": "đầu",
+          "start": 1.553873873873874,
+          "end": 1.6951351351351354,
+          "probability": 0.9992378155390421
+        },
+        {
+          "word": "thôi",
+          "start": 1.8162162162162163,
+          "end": 2.0583783783783787,
+          "probability": 0.9994331002235413
+        }
+      ],
+      "asr_final_word": [
+        "tay",
+        0.7,
+        1.0,
+        0.9228521585464478
+      ]
+    }
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "voice_id": "VpYLlCQEgcoHgycJstNP",
+  "text": "Đây là gang tay",
+  "seed": 7,
+  "model_text": "Đây là gang tay; Bắt đầu thôi.",
+  "source_file": "semicolon7.wav",
+  "final_file": "after-v2.wav",
+  "tempo": 0.8,
+  "final_duration_seconds": 1.5937916666666667,
+  "recognized_full_text": "Đây là gang tay bắt đầu thôi",
+  "aligned_tay_start_seconds": 0.9081081081081082,
+  "protected_tay_end_seconds": 1.08972972972973,
+  "source_fade_start_seconds": 1.2645208333333334,
+  "source_cut_seconds": 1.2795208333333334,
+  "cut_method": "low_energy_zero_crossing",
+  "verification": "ASR and CTC recognized the complete phrase, including tay. The fade starts about 175 ms after the protected end of tay. Tempo adjustment follows trimming. This is an automated check, not a listening evaluation."
+}

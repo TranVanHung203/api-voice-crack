@@ -16,7 +16,8 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
-from tts_delivery import AudioEncodingError, audio_response, encode_mp3
+from audio_cache_store import atomic_write, backup_audio, read_audio
+from tts_delivery import AudioEncodingError, audio_response, change_wav_tempo, encode_mp3, tempo_from_rate
 # To run the server, use the following command:
 # uvicorn server:app --host 0.0.0.0 --port 8000
 #
@@ -48,9 +49,12 @@ from vieneu_backend import (
 from gwen_backend import GwenBackendError, GwenVoiceNotFoundError, gwen_backend
 
 # Set True to override client voice IDs; set FIXED_VOICE_ID to your installed ID.
+# FIXED_PROVIDER also overrides /tts provider when FORCE_VOICE_ID is True.
+# None preserves automatic/client routing; otherwise use edge/vtts/zerotts/vieneu/gwen.
 # Restart the server after changing these settings.
 FORCE_VOICE_ID = False
-FIXED_VOICE_ID = "hamy"
+FIXED_VOICE_ID = "Mỹ Duyên"
+FIXED_PROVIDER: str | None = "vieneu"
 
 
 def _effective_voice_id(requested_voice_id: str | None) -> str | None:
@@ -123,7 +127,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["ETag", "Accept-Ranges", "Content-Range", "Content-Length"],
+    expose_headers=["ETag", "Accept-Ranges", "Content-Range", "Content-Length", "X-Audio-Duration-Seconds"],
 )
 
 
@@ -166,8 +170,8 @@ def _load_disk_cache() -> None:
 
 
 def _save_to_disk(key: str, data: bytes) -> None:
-    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    _cache_path(key).write_bytes(data)
+    atomic_write(_cache_path(key), data)
+    backup_audio(_cache_path(key), "edge", data)
 
 
 def _remember_edge_audio(key: str, data: bytes) -> None:
@@ -199,11 +203,12 @@ async def _get_audio(text: str, voice: str, rate: str, volume: str, pitch: str) 
 
         # 2. Disk hit (entry evicted from RAM but file still present)
         disk_file = _cache_path(key)
-        if disk_file.exists():
-            audio_data = disk_file.read_bytes()
+        try:
+            audio_data = await asyncio.to_thread(read_audio, disk_file, "edge")
             # Touch the file so its mtime reflects recent use
-            os.utime(disk_file)
-        else:
+            if disk_file.exists():
+                os.utime(disk_file)
+        except OSError:
             # 3. Generate from Microsoft TTS
             for attempt in range(3):
                 try:
@@ -222,7 +227,7 @@ async def _get_audio(text: str, voice: str, rate: str, volume: str, pitch: str) 
                     if attempt == 2:
                         raise
                     await asyncio.sleep(0.3 * (attempt + 1))
-            _save_to_disk(key, audio_data)
+            await asyncio.to_thread(_save_to_disk, key, audio_data)
 
         _remember_edge_audio(key, audio_data)
         _cache_locks.pop(key, None)
@@ -336,28 +341,45 @@ async def _synthesize_tts_response(
     seed: int | None = None,
     format: Literal["wav", "mp3"] | None = None,
     request: Request | None = None,
+    rate_is_explicit: bool = False,
 ) -> Response:
     """Route a unified /tts request to the selected speech engine."""
     if not text.strip():
         raise HTTPException(status_code=400, detail="text must not be empty")
     voiceid = _effective_voice_id(voiceid)
-    if FORCE_VOICE_ID and provider and provider.strip().lower() == "edge":
+    provider_is_fixed = FORCE_VOICE_ID and FIXED_PROVIDER is not None
+    if provider_is_fixed:
+        provider = FIXED_PROVIDER
+    elif FORCE_VOICE_ID and provider and provider.strip().lower() == "edge":
         # Edge cannot use registered IDs; preserve explicit ZeroTTS/V-TTS routing.
         provider = None
     selected_provider = provider.strip().lower() if provider else None
-    if selected_provider not in {None, "edge", "vtts", "zerotts", "vieneu", "gwen"}:
+    if (selected_provider not in {None, "edge", "vtts", "zerotts", "vieneu", "gwen"}
+            or (provider_is_fixed and selected_provider is None)):
         raise HTTPException(
-            status_code=400, detail="provider must be edge, vtts, zerotts, vieneu, or gwen"
+            status_code=503 if provider_is_fixed else 400,
+            detail=("FIXED_PROVIDER" if provider_is_fixed else "provider")
+            + " must be edge, vtts, zerotts, vieneu, or gwen",
         )
+    if provider_is_fixed and selected_provider == "edge":
+        voice = voiceid
     resolved_voiceid = voiceid.strip() if voiceid else None
     if selected_provider in {"vieneu", "gwen"}:
         backend = gwen_backend if selected_provider == "gwen" else vieneu_backend
+        tempo = 1.0
+        if selected_provider == "gwen" and rate_is_explicit:
+            try:
+                tempo = tempo_from_rate(rate)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
         if not resolved_voiceid and voice != "vi-VN-HoaiMyNeural":
             resolved_voiceid = voice.strip() or None
         try:
             audio = await asyncio.to_thread(
                 backend.synthesize_wav, text.strip(), resolved_voiceid
             )
+            if tempo != 1.0:
+                audio = await asyncio.to_thread(change_wav_tempo, audio, tempo, backend.audio_cache_dir())
             output_format = format or "wav"
             if output_format == "mp3":
                 audio = await asyncio.to_thread(
@@ -455,6 +477,7 @@ async def text_to_speech(req: TTSRequest, request: Request):
         voiceid=req.voiceid or req.voice_id,
         provider=req.provider,
         rate=req.rate,
+        rate_is_explicit="rate" in req.model_fields_set,
         volume=req.volume,
         pitch=req.pitch,
         eoa_extra_frames=req.eoa_extra_frames,
@@ -494,6 +517,7 @@ async def text_to_speech_get(
         voiceid=voiceid or voice_id,
         provider=provider,
         rate=rate,
+        rate_is_explicit="rate" in request.query_params,
         volume=volume,
         pitch=pitch,
         eoa_extra_frames=eoa_extra_frames,

@@ -1,0 +1,20 @@
+{
+  "name": "quangminh_child",
+  "display_name": "Quang Minh - gi\u1ecdng tr\u1ebb h\u00f3a",
+  "language": "vi",
+  "description": "Processed childlike male delivery from Quang Minh",
+  "tags": [
+    "male",
+    "childlike",
+    "processed"
+  ],
+  "source_voice_id": "quangminh",
+  "source_model_revision": "c2bfbd67dc648cac455077333f7cf5c18a2e3bb4",
+  "source_embedding_sha256": "4d2acb18f831ade23ed2d02e7b749fa745c95e9ee305795c5ddeb75f93d35fdb",
+  "delivery": {
+    "pitch_semitones": 5.0,
+    "formant_mode": "follow_pitch",
+    "algorithm": "resample_atempo_v2",
+    "tempo": 1.0
+  }
+}

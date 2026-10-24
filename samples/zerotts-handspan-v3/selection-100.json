@@ -1,0 +1,13 @@
+{
+  "text": "Đây là gang tay",
+  "voice_id": "VpYLlCQEgcoHgycJstNP",
+  "file": "tay-fuller-100.wav",
+  "seed": 7,
+  "global_tempo": 1.0,
+  "word_tempo": 0.75,
+  "word_start_seconds": 0.74,
+  "source_seconds_before_extension": 1.2795208333333334,
+  "source_seconds_after_extension": 1.4491875,
+  "final_seconds": 1.4491875,
+  "method": "The aligned final word is extended after verified suffix trimming and joined with a 10 ms crossfade. The rest of the phrase plays at original speed."
+}

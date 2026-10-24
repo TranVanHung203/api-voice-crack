@@ -18,6 +18,7 @@ import threading
 import unicodedata
 import uuid
 import wave
+from audio_cache_store import backup_audio, read_audio
 
 ROOT = Path(__file__).resolve().parent
 MODEL_ID = "g-group-ai-lab/gwen-tts-0.6B"
@@ -98,12 +99,17 @@ class GwenBackend:
             ROOT / ".venv-gwen" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
         )))
         if not executable.is_file():
-            raise GwenBackendError("Gwen runtime missing. Run setup_gwen.ps1 or set GWEN_PYTHON to its Python executable")
+            raise GwenBackendError(
+                "Gwen runtime missing. Run setup_gwen.ps1 (Windows) or python setup_gwen.py (Linux), "
+                "or set GWEN_PYTHON to its Python executable. On Spaces, deploy setup_gwen.py and hf_app.py."
+            )
         log_path = ROOT / "models/gwen/worker.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         self._stderr = log_path.open("ab")
         env = os.environ.copy()
         env.update(PYTHONIOENCODING="utf-8", PYTHONNOUSERSITE="1", PYTHONUNBUFFERED="1")
+        # Spaces enables hf_transfer globally, but it is absent in this venv.
+        env["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
         env.pop("PYTHONHOME", None)
         env.setdefault("HF_HOME", str(ROOT / "models/gwen/hf-cache"))
         env.setdefault("HF_HUB_DISABLE_XET", "1")
@@ -202,7 +208,7 @@ class GwenBackend:
                 return self._audio_cache[key]
             path = self.audio_cache_dir() / f"{key}.wav"
             try:
-                cached = path.read_bytes()
+                cached = read_audio(path, "gwen")
                 if valid_wav(cached):
                     return self._remember(key, cached)
             except OSError:
@@ -220,6 +226,7 @@ class GwenBackend:
                     os.replace(temporary, path)
                 except OSError:
                     LOGGER.warning("Could not persist Gwen audio cache", exc_info=True)
+                backup_audio(path, "gwen", audio)
                 return self._remember(key, audio)
             except OSError as exc:
                 raise GwenBackendError(f"Could not access Gwen audio files: {exc}") from exc

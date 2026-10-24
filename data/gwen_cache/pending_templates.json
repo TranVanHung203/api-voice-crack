@@ -1,0 +1,1352 @@
+[
+  {
+    "lesson": "KD-01. Các số 0, 1, 2, 3, 4, 5",
+    "file": "helpers/cac_so_tu_0_den_10_cac_so_0_1_2_3_4_5_voice_helper.dart",
+    "source_lines": "14",
+    "document_line": 113,
+    "context": "numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-02. Các số 6, 7, 8, 9, 10",
+    "file": "cubits/cac_so_tu_0_den_10_cac_so_6_7_8_9_10_cubit.dart",
+    "source_lines": "91",
+    "document_line": 181,
+    "context": "_handleInteractiveTap / advance",
+    "kind": "Mẫu động",
+    "text": "${CacSoTu0Den10CacSo678910VoiceHelper.completedInstructionText} ${CacSoTu0Den10CacSo678910VoiceHelper.closingVoiceText}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-02. Các số 6, 7, 8, 9, 10",
+    "file": "helpers/cac_so_tu_0_den_10_cac_so_6_7_8_9_10_voice_helper.dart",
+    "source_lines": "14",
+    "document_line": 213,
+    "context": "numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-04. So sánh số trong phạm vi 10",
+    "file": "helpers/cac_so_tu_0_den_10_so_sanh_so_voice_helper.dart",
+    "source_lines": "38",
+    "document_line": 304,
+    "context": "numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-04. So sánh số trong phạm vi 10",
+    "file": "presentation/widgets/cac_so_tu_0_den_10_so_sanh_so_board.dart",
+    "source_lines": "396",
+    "document_line": 324,
+    "context": "_toTitleCase",
+    "kind": "Mẫu động",
+    "text": "${trimmed[0].toUpperCase()}${trimmed.substring(1)}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "helpers/phep_cong_phep_tru_trong_pham_vi_10_bang_cong_bang_tru_trong_pham_vi_10_helper.dart",
+    "source_lines": "94",
+    "document_line": 692,
+    "context": "promptForStageIndex",
+    "kind": "Mẫu động",
+    "text": "Bạn hãy chạm vào bong bóng có kết quả của phép tính ${stage.expressionText}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "helpers/phep_cong_phep_tru_trong_pham_vi_10_bang_cong_bang_tru_trong_pham_vi_10_helper.dart",
+    "source_lines": "100",
+    "document_line": 693,
+    "context": "promptVoiceForStageIndex",
+    "kind": "Mẫu động",
+    "text": "Bạn hãy chạm vào bong bóng có kết quả của phép tính ${stage.expressionVoiceText}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-14. Bảng các số từ 1 đến 100",
+    "file": "helpers/cac_so_den_100_bang_cac_so_tu_1_den_100_helper.dart",
+    "source_lines": "269",
+    "document_line": 1118,
+    "context": "harvestCountVoiceTextFor",
+    "kind": "Mẫu động",
+    "text": "mười ${_digitVoiceTexts[unit]}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-14. Bảng các số từ 1 đến 100",
+    "file": "helpers/cac_so_den_100_bang_cac_so_tu_1_den_100_helper.dart",
+    "source_lines": "274",
+    "document_line": 1119,
+    "context": "tensText",
+    "kind": "Mẫu động",
+    "text": "${_digitVoiceTexts[tens]} mươi",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-14. Bảng các số từ 1 đến 100",
+    "file": "helpers/cac_so_den_100_bang_cac_so_tu_1_den_100_helper.dart",
+    "source_lines": "286",
+    "document_line": 1122,
+    "context": "harvestCountVoiceTextFor",
+    "kind": "Mẫu động",
+    "text": "${tensText} ${unitText}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-15. So sánh số có hai chữ số",
+    "file": "helpers/cac_so_den_100_so_sanh_so_co_hai_chu_so_helper.dart",
+    "source_lines": "103",
+    "document_line": 1203,
+    "context": "countVoiceTextForType",
+    "kind": "Mẫu động",
+    "text": "Mẹt đậu đen có ${dauDenCount} hạt đậu đen.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-15. So sánh số có hai chữ số",
+    "file": "helpers/cac_so_den_100_so_sanh_so_co_hai_chu_so_helper.dart",
+    "source_lines": "106",
+    "document_line": 1204,
+    "context": "countVoiceTextForType",
+    "kind": "Mẫu động",
+    "text": "Mẹt đậu xanh có ${dauXanhCount} hạt đậu xanh.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-17. Đơn vị đo độ dài",
+    "file": "cubit/do_dai_va_do_do_dai_don_vi_do_do_dai_cubit.dart",
+    "source_lines": "34",
+    "document_line": 1352,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "${DoDaiVaDoDoDaiDonViDoDoDaiHelper.wrongText}. ${currentStep.prompt}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-28. Biểu diễn số bằng các khối lập phương — Drag Squares 3",
+    "file": "drag_squares3_game.dart",
+    "source_lines": "197",
+    "document_line": 2385,
+    "context": "_hintForCurrentState",
+    "kind": "Mẫu động",
+    "text": "Thành công! Bạn đã tạo đúng số ${targetValue}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-28. Biểu diễn số bằng các khối lập phương — Drag Squares 3",
+    "file": "drag_squares3_game.dart",
+    "source_lines": "201",
+    "document_line": 2386,
+    "context": "_hintForCurrentState",
+    "kind": "Mẫu động",
+    "text": "Kéo các khối vào bảng để tạo số ${targetValue}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-28. Biểu diễn số bằng các khối lập phương — Drag Squares 3",
+    "file": "drag_squares3_game.dart",
+    "source_lines": "204",
+    "document_line": 2387,
+    "context": "_hintForCurrentState",
+    "kind": "Mẫu động",
+    "text": "Đang có ${state.value}. Kéo tiếp hoặc bấm Next để kiểm tra.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-28. Biểu diễn số bằng các khối lập phương — Drag Squares 3",
+    "file": "drag_squares3_game.dart",
+    "source_lines": "213",
+    "document_line": 2388,
+    "context": "_overflowHint",
+    "kind": "Mẫu động",
+    "text": "Không thể kéo khối ${type.badge}: ${value} + ${type.value} = ${projected} (vượt ${_selectionCapValue}).",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-28. Biểu diễn số bằng các khối lập phương — Drag Squares 3",
+    "file": "drag_squares3_page.dart",
+    "source_lines": "96",
+    "document_line": 2412,
+    "context": "_questionTitle",
+    "kind": "Mẫu động",
+    "text": "Vậy số ${_previewValue} được biểu diễn như thế nào? Chúng ta hãy cùng khám phá nhé!",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-28. Biểu diễn số bằng các khối lập phương — Drag Squares 3",
+    "file": "drag_squares3_page.dart",
+    "source_lines": "150",
+    "document_line": 2414,
+    "context": "_voiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy số ${widget.value} được biểu diễn như thế nào? Chúng ta hãy cùng khám phá nhé!",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-31. Khởi động 5",
+    "file": "presentation/pages/khoi_dong_5_page.dart",
+    "source_lines": "54",
+    "document_line": 2544,
+    "context": "_questionForState",
+    "kind": "Mẫu động",
+    "text": "Vậy số ${state.number} gồm mấy trăm, mấy chục, mấy đơn vị?",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KD-31. Khởi động 5",
+    "file": "presentation/pages/khoi_dong_5_page.dart",
+    "source_lines": "56",
+    "document_line": 2545,
+    "context": "_questionForState",
+    "kind": "Mẫu động",
+    "text": "Vậy ${state.number} được viết thành tổng các trăm, chục và đơn vị như thế nào? Chúng ta hãy cùng khám phá nhé!",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-01. Các số 0, 1, 2, 3, 4, 5",
+    "file": "helpers/cac_so_0_den_5_speech_helper.dart",
+    "source_lines": "27",
+    "document_line": 2644,
+    "context": "countCompletedVoice",
+    "kind": "Mẫu động",
+    "text": "Trong bể có ${targetNumber} con cá, ${targetNumber} con cá tương ứng với ${targetNumber} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-01. Các số 0, 1, 2, 3, 4, 5",
+    "file": "helpers/cac_so_0_den_5_speech_helper.dart",
+    "source_lines": "32",
+    "document_line": 2645,
+    "context": "writeNumberVoice",
+    "kind": "Mẫu động",
+    "text": "Hãy viết số ${targetNumber}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-01. Các số 0, 1, 2, 3, 4, 5",
+    "file": "helpers/cac_so_0_den_5_speech_helper.dart",
+    "source_lines": "65",
+    "document_line": 2651,
+    "context": "replayVoice",
+    "kind": "Mẫu động",
+    "text": "Đặt lại bài này. Em hãy tìm số ${targetNumber} nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-01. Các số 0, 1, 2, 3, 4, 5",
+    "file": "helpers/cac_so_0_den_5_speech_helper.dart",
+    "source_lines": "74",
+    "document_line": 2652,
+    "context": "nextStageVoice",
+    "kind": "Mẫu động",
+    "text": "Bài ${targetNumber}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-01. Các số 0, 1, 2, 3, 4, 5",
+    "file": "helpers/cac_so_0_den_5_speech_helper.dart",
+    "source_lines": "77",
+    "document_line": 2653,
+    "context": "nextStageVoice",
+    "kind": "Mẫu động",
+    "text": "Bài ${targetNumber}. ${normalizedPrompt}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-02. Các số 6, 7, 8, 9, 10",
+    "file": "helpers/cac_so_6_den_10_speech_helper.dart",
+    "source_lines": "27",
+    "document_line": 2765,
+    "context": "countCompletedVoice",
+    "kind": "Mẫu động",
+    "text": "Trong bể có ${targetNumber} con cá, ${targetNumber} con cá tương ứng với ${targetNumber} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-02. Các số 6, 7, 8, 9, 10",
+    "file": "helpers/cac_so_6_den_10_speech_helper.dart",
+    "source_lines": "32",
+    "document_line": 2766,
+    "context": "writeNumberVoice",
+    "kind": "Mẫu động",
+    "text": "Hãy viết số ${targetNumber}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-02. Các số 6, 7, 8, 9, 10",
+    "file": "helpers/cac_so_6_den_10_speech_helper.dart",
+    "source_lines": "65",
+    "document_line": 2772,
+    "context": "replayVoice",
+    "kind": "Mẫu động",
+    "text": "Đặt lại bài này. Em hãy tìm số ${targetNumber} nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-02. Các số 6, 7, 8, 9, 10",
+    "file": "helpers/cac_so_6_den_10_speech_helper.dart",
+    "source_lines": "74",
+    "document_line": 2773,
+    "context": "nextStageVoice",
+    "kind": "Mẫu động",
+    "text": "Bài ${targetNumber}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-02. Các số 6, 7, 8, 9, 10",
+    "file": "helpers/cac_so_6_den_10_speech_helper.dart",
+    "source_lines": "77",
+    "document_line": 2774,
+    "context": "nextStageVoice",
+    "kind": "Mẫu động",
+    "text": "Bài ${targetNumber}. ${normalizedPrompt}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "helpers/kham_pha_03_feedback_helper.dart",
+    "source_lines": "42",
+    "document_line": 2842,
+    "context": "incorrectDotSelectionVoice",
+    "kind": "Mẫu động",
+    "text": "${wrongCard.dotCount} dấu chấm không bằng ${targetCount} dấu chấm. Hai hàng bằng nhau phải có cùng số chấm. Hãy chọn hàng có ${targetCount} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "helpers/kham_pha_03_feedback_helper.dart",
+    "source_lines": "50",
+    "document_line": 2843,
+    "context": "incorrectDotSelectionVoice",
+    "kind": "Mẫu động",
+    "text": "${selectedCard.dotCount} dấu chấm ít hơn ${correctCard.dotCount} dấu chấm. Em đã chọn hàng có ít chấm hơn. Hãy chọn hàng có ${correctCard.dotCount} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "helpers/kham_pha_03_feedback_helper.dart",
+    "source_lines": "56",
+    "document_line": 2844,
+    "context": "incorrectDotSelectionVoice",
+    "kind": "Mẫu động",
+    "text": "${selectedCard.dotCount} dấu chấm nhiều hơn ${correctCard.dotCount} dấu chấm. Em đã chọn hàng có nhiều chấm hơn. Hãy chọn hàng có ${correctCard.dotCount} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "presentation/widgets/kham_pha_03_content.dart",
+    "source_lines": "153",
+    "document_line": 2871,
+    "context": "rabbitQuestion",
+    "kind": "Mẫu động",
+    "text": "${rabbitCount} con thỏ tương ứng với ${rabbitCount} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "presentation/widgets/kham_pha_03_content.dart",
+    "source_lines": "155",
+    "document_line": 2872,
+    "context": "carrotQuestion",
+    "kind": "Mẫu động",
+    "text": "${carrotCount} cà rốt tương ứng với ${carrotCount} dấu chấm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "presentation/widgets/kham_pha_03_content.dart",
+    "source_lines": "392",
+    "document_line": 2876,
+    "context": "_resolveConnectStageCompletionVoiceMessage",
+    "kind": "Mẫu động",
+    "text": "Còn ${diff} bạn thỏ không có cà rốt, vậy số thỏ nhiều hơn số cà rốt",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-03. Nhiều hơn, ít hơn, bằng nhau",
+    "file": "presentation/widgets/kham_pha_03_content.dart",
+    "source_lines": "396",
+    "document_line": 2877,
+    "context": "_resolveConnectStageCompletionVoiceMessage",
+    "kind": "Mẫu động",
+    "text": "Còn ${diff} củ cà rốt, vậy số thỏ ít hơn số cà rốt",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "42",
+    "document_line": 2920,
+    "context": "leftCountDoneVoiceText",
+    "kind": "Mẫu động",
+    "text": "${count} quả cam tương ứng với ${count} dấu chấm",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "46",
+    "document_line": 2921,
+    "context": "rightCountDoneVoiceText",
+    "kind": "Mẫu động",
+    "text": "${count} quả táo tương ứng với ${count} dấu chấm",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "54",
+    "document_line": 2923,
+    "context": "dotsToNumberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${count} dấu chấm ta có số ${count}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "58",
+    "document_line": 2924,
+    "context": "relationPromptText",
+    "kind": "Mẫu động",
+    "text": "Tiếp theo, hãy chạm vào \"${stage.actionLabel}\".",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "62",
+    "document_line": 2925,
+    "context": "dotsRelationVoiceText",
+    "kind": "Mẫu động",
+    "text": "${stage.leftCount} dấu chấm ${dotsRelationText(stage)} ${stage.rightCount} dấu chấm",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "75",
+    "document_line": 2929,
+    "context": "handwritingPromptText",
+    "kind": "Mẫu động",
+    "text": "Em hãy đồ dấu ${symbolNameText(stage.symbol)} nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "79",
+    "document_line": 2930,
+    "context": "equationVoiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy ta có ${stage.leftCount} ${stage.equationRelationText} ${stage.rightCount}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-04. So sánh số trong phạm vi 10",
+    "file": "helpers/kham_pha_04_voice_helper.dart",
+    "source_lines": "130",
+    "document_line": 2941,
+    "context": "numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-05. Mấy và mấy",
+    "file": "cubit/kham_pha_05_cubit.dart",
+    "source_lines": "264",
+    "document_line": 3052,
+    "context": "countPlayed / prompt",
+    "kind": "Mẫu động",
+    "text": "${movedState.plantedBudCount}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-05. Mấy và mấy",
+    "file": "cubit/kham_pha_05_cubit.dart",
+    "source_lines": "592",
+    "document_line": 3053,
+    "context": "countPlayed / prompt",
+    "kind": "Mẫu động",
+    "text": "${spokenCount}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-05. Mấy và mấy",
+    "file": "helpers/kham_pha_05_stage_helper.dart",
+    "source_lines": "105",
+    "document_line": 3139,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "kham_pha_05_stage_${stage.index + 1}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-06. Hình vuông, hình tròn, hình tam giác, hình chữ nhật",
+    "file": "cubit/hinh_phang_01_cubit.dart",
+    "source_lines": "242",
+    "document_line": 3247,
+    "context": "_submitDiscriminationChoice / message",
+    "kind": "Mẫu động",
+    "text": "Chưa đúng. Con hãy nhìn lại và chọn ${stage.resultLabel.toLowerCase()}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-06. Hình vuông, hình tròn, hình tam giác, hình chữ nhật",
+    "file": "cubit/hinh_phang_01_state.dart",
+    "source_lines": "133",
+    "document_line": 3289,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "lam_quen_hinh_phang_mixed_${mixedRoundIndex + 1}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-06. Hình vuông, hình tròn, hình tam giác, hình chữ nhật",
+    "file": "cubit/hinh_phang_01_state.dart",
+    "source_lines": "135",
+    "document_line": 3290,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "lam_quen_hinh_phang_${currentStage.id}_${scene.name}_${progressCurrent}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-06. Hình vuông, hình tròn, hình tam giác, hình chữ nhật",
+    "file": "models/hinh_phang_01_item_model.dart",
+    "source_lines": "49",
+    "document_line": 3311,
+    "context": "introText",
+    "kind": "Mẫu động",
+    "text": "Con hãy dùng ngón tay kéo theo đường viền của ${items.first.label}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-06. Hình vuông, hình tròn, hình tam giác, hình chữ nhật",
+    "file": "models/hinh_phang_01_item_model.dart",
+    "source_lines": "257",
+    "document_line": 3334,
+    "context": "hinhPhang01TracePromptText",
+    "kind": "Mẫu động",
+    "text": "Con hãy dùng ngón tay kéo theo đường viền của ${itemLabel}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-06. Hình vuông, hình tròn, hình tam giác, hình chữ nhật",
+    "file": "models/hinh_phang_01_item_model.dart",
+    "source_lines": "260",
+    "document_line": 3335,
+    "context": "hinhPhang01TracePromptText",
+    "kind": "Mẫu động",
+    "text": "Tiếp theo, kéo ngón tay theo đường viền của ${itemLabel} nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-07. Phép cộng trong phạm vi 10",
+    "file": "bai_1/cubit/phep_cong_trong_pham_vi_10_bai_1_cubit.dart",
+    "source_lines": "82",
+    "document_line": 3386,
+    "context": "onFruitCountTapped",
+    "kind": "Mẫu động",
+    "text": "${count}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-07. Phép cộng trong phạm vi 10",
+    "file": "bai_1/cubit/phep_cong_trong_pham_vi_10_bai_1_state.dart",
+    "source_lines": "89",
+    "document_line": 3430,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "phep_cong_trong_pham_vi_10_bai_1_${currentStage.id}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-07. Phép cộng trong phạm vi 10",
+    "file": "bai_2/cubit/phep_cong_trong_pham_vi_10_bai_2_cubit.dart",
+    "source_lines": "208",
+    "document_line": 3470,
+    "context": "_runInitialThreeCount / voice",
+    "kind": "Mẫu động",
+    "text": "${index + 1}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-07. Phép cộng trong phạm vi 10",
+    "file": "bai_2/cubit/phep_cong_trong_pham_vi_10_bai_2_cubit.dart",
+    "source_lines": "242, 372",
+    "document_line": 3471,
+    "context": "completed / voice",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-07. Phép cộng trong phạm vi 10",
+    "file": "bai_2/cubit/phep_cong_trong_pham_vi_10_bai_2_state.dart",
+    "source_lines": "85",
+    "document_line": 3509,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "phep_cong_trong_pham_vi_10_bai_2_${currentStage.id}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-07. Phép cộng trong phạm vi 10",
+    "file": "bai_3/cubit/phep_cong_trong_pham_vi_10_bai_3_state.dart",
+    "source_lines": "50",
+    "document_line": 3638,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "phep_cong_trong_pham_vi_10_bai_3_scene_${currentScreen}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-08. Phép trừ trong phạm vi 10",
+    "file": "bai_1/cubit/phep_tru_trong_pham_vi_10_bai_1_state.dart",
+    "source_lines": "85",
+    "document_line": 3807,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "phep_tru_trong_pham_vi_10_bai_1_${stageKind.name}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-08. Phép trừ trong phạm vi 10",
+    "file": "bai_2/cubit/phep_tru_trong_pham_vi_10_bai_2_state.dart",
+    "source_lines": "110",
+    "document_line": 3903,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "phep_tru_trong_pham_vi_10_bai_2_${stageKind.name}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-08. Phép trừ trong phạm vi 10",
+    "file": "bai_3/cubit/phep_tru_trong_pham_vi_10_bai_3_state.dart",
+    "source_lines": "117",
+    "document_line": 4004,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "phep_tru_trong_pham_vi_10_bai_3_${stageKind.name}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_1/presentation/widgets/bang_cong_bang_tru_trong_pham_vi_10_bai_1_view.dart",
+    "source_lines": "273",
+    "document_line": 4229,
+    "context": "_practiceCompletedVoiceTextFor",
+    "kind": "Mẫu động",
+    "text": "Đây là bảng cộng của số ${tableNumber}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_1/presentation/widgets/bang_cong_bang_tru_trong_pham_vi_10_bai_1_view.dart",
+    "source_lines": "417",
+    "document_line": 4232,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "Ô ${leftValue} cộng ô trống bằng ${resultValue} chưa đúng. Hãy nghĩ: từ ${leftValue} cần thêm mấy để đủ ${resultValue}?",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_1/presentation/widgets/bang_cong_bang_tru_trong_pham_vi_10_bai_1_view.dart",
+    "source_lines": "418",
+    "document_line": 4233,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "Ô ${leftValue} cộng ô trống bằng ${resultValue} vẫn chưa đúng. Em hãy đếm thêm từ ${leftValue} cho tới ${resultValue} để tìm số còn thiếu.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_1/presentation/widgets/bang_cong_bang_tru_trong_pham_vi_10_bai_1_view.dart",
+    "source_lines": "607",
+    "document_line": 4234,
+    "context": "_additionEquationQuestionTitle",
+    "kind": "Mẫu động",
+    "text": "${leftValue} + ${5 - leftValue} = 5.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_1/presentation/widgets/bang_cong_bang_tru_trong_pham_vi_10_bai_1_view.dart",
+    "source_lines": "611",
+    "document_line": 4235,
+    "context": "_additionEquationVoiceText",
+    "kind": "Mẫu động",
+    "text": "${leftValue} cộng ${5 - leftValue} vẫn bằng 5.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_2/bang_cong_bang_tru_trong_pham_vi_10_bai_2_view.dart",
+    "source_lines": "271",
+    "document_line": 4306,
+    "context": "_practiceCompletedVoiceTextFor",
+    "kind": "Mẫu động",
+    "text": "Đây là bảng trừ của số ${tableNumber}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_2/bang_cong_bang_tru_trong_pham_vi_10_bai_2_view.dart",
+    "source_lines": "415",
+    "document_line": 4309,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "Em đang làm ${minuend} trừ ${subtrahend}. Hãy bắt đầu với ${minuend} rồi bớt ${subtrahend}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_2/bang_cong_bang_tru_trong_pham_vi_10_bai_2_view.dart",
+    "source_lines": "416",
+    "document_line": 4310,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "Ô ${minuend} trừ ${subtrahend} vẫn chưa đúng. Hãy đếm lùi ${subtrahend} bước từ ${minuend} để tìm số còn lại.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_2/bang_cong_bang_tru_trong_pham_vi_10_bai_2_view.dart",
+    "source_lines": "613",
+    "document_line": 4311,
+    "context": "_subtractionEquationQuestionTitle",
+    "kind": "Mẫu động",
+    "text": "5 - ${subtractedFlowerCount} = ${5 - subtractedFlowerCount}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-09. Bảng cộng, bảng trừ trong phạm vi 10",
+    "file": "bai_2/bang_cong_bang_tru_trong_pham_vi_10_bai_2_view.dart",
+    "source_lines": "617",
+    "document_line": 4312,
+    "context": "_subtractionEquationVoiceText",
+    "kind": "Mẫu động",
+    "text": "5 trừ ${subtractedFlowerCount} bằng ${5 - subtractedFlowerCount}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-10. Thực hành lắp ghép, xếp hình",
+    "file": "cubit/hinh_phang_thuc_hanh_state.dart",
+    "source_lines": "97",
+    "document_line": 4398,
+    "context": "questionIdentity",
+    "kind": "Mẫu động",
+    "text": "hinh_phang_thuc_hanh_${currentStage.id}_${progressCurrent}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-11. Khối lập phương, khối hộp chữ nhật",
+    "file": "presentation/widgets/hinh_khoi_01_view.dart",
+    "source_lines": "383",
+    "document_line": 4494,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "${item.displayName} chưa thuộc nhóm ${targetShape.displayName.toLowerCase()}. Hãy so sánh hình dạng của nó với khối mẫu.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-11. Khối lập phương, khối hộp chữ nhật",
+    "file": "presentation/widgets/hinh_khoi_01_view.dart",
+    "source_lines": "384",
+    "document_line": 4495,
+    "context": "feedback",
+    "kind": "Mẫu động",
+    "text": "${item.displayName} thuộc nhóm ${targetShape.displayName.toLowerCase()}, nhưng chưa đúng vị trí. Hãy so sánh với hình dạng gợi ý.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-11. Khối lập phương, khối hộp chữ nhật",
+    "file": "presentation/widgets/hinh_khoi_01_view.dart",
+    "source_lines": "636",
+    "document_line": 4496,
+    "context": "_handleMixedPracticeSubmit / message",
+    "kind": "Mẫu động",
+    "text": "${wrongItem.displayName} chưa thuộc nhóm ${selectedShape.displayName.toLowerCase()}. Hãy so sánh hình dạng của nó với khối mẫu.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-12. Vị trí, định hướng trong không gian",
+    "file": "presentation/widgets/lam_quen_voi_mot_so_hinh_khoi_vi_tri_dinh_huong_trong_khong_gian_kham_pha_view.dart",
+    "source_lines": "717",
+    "document_line": 4643,
+    "context": "spokenText",
+    "kind": "Mẫu động",
+    "text": "${_friendNameForRole(role)} đứng ${voiceLabel}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-12. Vị trí, định hướng trong không gian",
+    "file": "presentation/widgets/lam_quen_voi_mot_so_hinh_khoi_vi_tri_dinh_huong_trong_khong_gian_kham_pha_view.dart",
+    "source_lines": "822",
+    "document_line": 4645,
+    "context": "_handleFridgeItemDropped / message",
+    "kind": "Mẫu động",
+    "text": "Đây là ${droppedShelf}. Yêu cầu là đặt ${item.label} ở ${targetShelf}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_1/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_1_view.dart",
+    "source_lines": "109",
+    "document_line": 4744,
+    "context": "_numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_1/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_1_view.dart",
+    "source_lines": "125",
+    "document_line": 4746,
+    "context": "leadingText",
+    "kind": "Mẫu động",
+    "text": "Vậy ${_tenGroupSize} rồi đến ${count}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_1/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_1_view.dart",
+    "source_lines": "129",
+    "document_line": 4747,
+    "context": "_appleVoiceTextForCount",
+    "kind": "Mẫu động",
+    "text": "${leadingText}${count} gồm ${tens} chục.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_1/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_1_view.dart",
+    "source_lines": "133",
+    "document_line": 4748,
+    "context": "_appleVoiceTextForCount",
+    "kind": "Mẫu động",
+    "text": "Đúng rồi. ${count} gồm ${tens} chục và ${ones} đơn vị.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_1/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_1_view.dart",
+    "source_lines": "136",
+    "document_line": 4749,
+    "context": "_appleVoiceTextForCount",
+    "kind": "Mẫu động",
+    "text": "${leadingText}${count} gồm ${tens} chục và ${ones} đơn vị.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_2/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_2_view.dart",
+    "source_lines": "64",
+    "document_line": 4804,
+    "context": "_numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_2/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_2_view.dart",
+    "source_lines": "78",
+    "document_line": 4806,
+    "context": "_roundTenVoiceTextForBagCount",
+    "kind": "Mẫu động",
+    "text": "${value} là ${bagCount} chục",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_2/presentation/widgets/cac_so_den_100_so_co_hai_chu_so_bai_2_view.dart",
+    "source_lines": "674",
+    "document_line": 4810,
+    "context": "_handleBagPlaced / prompt",
+    "kind": "Mẫu động",
+    "text": "${nextCount} chục là bao nhiêu?",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_3/cac_so_den_100_so_co_hai_chu_so_bai_3_view.dart",
+    "source_lines": "72",
+    "document_line": 4851,
+    "context": "_placeValueVoiceText",
+    "kind": "Mẫu động",
+    "text": "${tenCount} chục và ${oneCount} đơn vị.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_3/cac_so_den_100_so_co_hai_chu_so_bai_3_view.dart",
+    "source_lines": "934",
+    "document_line": 4857,
+    "context": "build / child",
+    "kind": "Mẫu động",
+    "text": "${tenCount}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-13. Số có hai chữ số",
+    "file": "bai_3/cac_so_den_100_so_co_hai_chu_so_bai_3_view.dart",
+    "source_lines": "941",
+    "document_line": 4858,
+    "context": "build / child",
+    "kind": "Mẫu động",
+    "text": "${oneCount}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-14. Bảng các số từ 1 đến 100",
+    "file": "cac_so_den_100_bang_cac_so_tu_1_den_100_view.dart",
+    "source_lines": "64, 109",
+    "document_line": 4928,
+    "context": "_digitVoiceText; _numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${value}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-14. Bảng các số từ 1 đến 100",
+    "file": "cac_so_den_100_bang_cac_so_tu_1_den_100_view.dart",
+    "source_lines": "90",
+    "document_line": 4932,
+    "context": "_numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "mười ${_trailingDigitVoiceText(ones, afterMuoi: false)}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-14. Bảng các số từ 1 đến 100",
+    "file": "cac_so_den_100_bang_cac_so_tu_1_den_100_view.dart",
+    "source_lines": "96",
+    "document_line": 4933,
+    "context": "tensText",
+    "kind": "Mẫu động",
+    "text": "${_digitVoiceText(tens)} mươi",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-14. Bảng các số từ 1 đến 100",
+    "file": "cac_so_den_100_bang_cac_so_tu_1_den_100_view.dart",
+    "source_lines": "102",
+    "document_line": 4934,
+    "context": "_numberVoiceText",
+    "kind": "Mẫu động",
+    "text": "${tensText} ${_trailingDigitVoiceText(ones, afterMuoi: true)}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-14. Bảng các số từ 1 đến 100",
+    "file": "cac_so_den_100_bang_cac_so_tu_1_den_100_view.dart",
+    "source_lines": "117",
+    "document_line": 4936,
+    "context": "_countTensVoiceText",
+    "kind": "Mẫu động",
+    "text": "${_numberVoiceText(tenCount)} chục.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-15. So sánh số có hai chữ số",
+    "file": "cac_so_den_100_so_sanh_so_co_hai_chu_so_view.dart",
+    "source_lines": "639, 654",
+    "document_line": 5012,
+    "context": "_handleOneTap / prompt; _handleOneTap / voice",
+    "kind": "Mẫu động",
+    "text": "${oneCount} đơn vị.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "gang_tay/gang_tay_view.dart",
+    "source_lines": "2174",
+    "document_line": 5296,
+    "context": "questionText",
+    "kind": "Mẫu động",
+    "text": "Nhap so phu hop cho ${label}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "188",
+    "document_line": 5363,
+    "context": "_pencilMeasureResultVoice",
+    "kind": "Mẫu động",
+    "text": "Nếu đầu còn lại chạm đến số ${_pencilMeasureCentimeters} thì vật đó dài ${_pencilMeasureCentimeters} xăng-ti-mét.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "190",
+    "document_line": 5364,
+    "context": "_inputPencilVoice",
+    "kind": "Mẫu động",
+    "text": "Hãy nhập số ${_pencilMeasureCentimeters} vào ô trống nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "206",
+    "document_line": 5372,
+    "context": "_greenBottleHeightResultVoice",
+    "kind": "Mẫu động",
+    "text": "Chai nước xanh cao ${_greenBottleMeasureCentimeters} xăng-ti-mét.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "218",
+    "document_line": 5378,
+    "context": "_pitcherHeightResultVoice",
+    "kind": "Mẫu động",
+    "text": "Bình nước cao ${_pitcherMeasureCentimeters} xăng-ti-mét.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "831",
+    "document_line": 5383,
+    "context": "_handleCorrectBookInput",
+    "kind": "Mẫu động",
+    "text": "Quyển sách dài ${_bookMeasureCentimeters} xăng-ti-mét.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "1146",
+    "document_line": 5384,
+    "context": "_buildStage / inputId",
+    "kind": "Mẫu động",
+    "text": "green_bottle_${_greenBottleMeasureCentimeters}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-17. Đơn vị đo độ dài",
+    "file": "xang_ti_met/xang_ti_met_view.dart",
+    "source_lines": "1245",
+    "document_line": 5386,
+    "context": "questionText",
+    "kind": "Mẫu động",
+    "text": "Nhap so phu hop cho ${label}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "210",
+    "document_line": 5468,
+    "context": "_initialPencilCaseDemoTitle",
+    "kind": "Mẫu động",
+    "text": "Hộp bút này dài khoảng ${_pencilCasePaperClipCount} kẹp giấy",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "228",
+    "document_line": 5469,
+    "context": "_currentEstimationInstructionTitle",
+    "kind": "Mẫu động",
+    "text": "Kéo thước kẹp giấy để đo ${object.label}. Khi đầu thước gần đúng vị trí, thước sẽ tự khớp vào đầu vật. Sau đó chọn đáp án phù hợp.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "230",
+    "document_line": 5470,
+    "context": "_currentEstimationInstructionTitle",
+    "kind": "Mẫu động",
+    "text": "Kéo thước kẹp giấy để đo ${object.label}, rồi chọn đáp án ước lượng phù hợp.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "240",
+    "document_line": 5471,
+    "context": "_currentCentimeterMeasurementTitle",
+    "kind": "Mẫu động",
+    "text": "Đặt vạch 0 của thước gần đầu ${object.label}; thước sẽ tự khớp khi gần đúng. Sau đó nhìn đầu còn lại và nhập số cm.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "242",
+    "document_line": 5472,
+    "context": "_currentCentimeterMeasurementTitle",
+    "kind": "Mẫu động",
+    "text": "Bắt đầu từ vạch 0, đo ${object.label} rồi nhập số cm phù hợp.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "260",
+    "document_line": 5473,
+    "context": "_startEstimationIntroSequence / replayPrompt",
+    "kind": "Mẫu động",
+    "text": "${_estimationAlignPencilText} ${_estimationReadPencilText}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "336",
+    "document_line": 5474,
+    "context": "_runCentimeterPencilDemo / replayPrompt",
+    "kind": "Mẫu động",
+    "text": "${_centimeterAlignPencilText} ${_centimeterReadPencilEndText} ${_centimeterPencilResultText}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "365",
+    "document_line": 5475,
+    "context": "_runCentimeterPencilDemo / action",
+    "kind": "Mẫu động",
+    "text": "${_objects[0].centimeterCount}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "592",
+    "document_line": 5476,
+    "context": "_handleSubmit / message",
+    "kind": "Mẫu động",
+    "text": "Con đang đặt đầu thước chưa trùng đầu ${object.label}. Hãy đưa đầu thước về đúng đầu vật rồi đo lại nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "617",
+    "document_line": 5477,
+    "context": "_handleSubmit / message",
+    "kind": "Mẫu động",
+    "text": "Chưa đúng, con hãy đo lại ${object.label} rồi chọn đáp án khác nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "669",
+    "document_line": 5478,
+    "context": "_handleSubmitCmAnswers / message",
+    "kind": "Mẫu động",
+    "text": "Hãy bắt đầu từ vạch 0: đưa vạch 0 của thước trùng với đầu ${object.label} rồi đo lại nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "678",
+    "document_line": 5479,
+    "context": "_handleSubmitCmAnswers / message",
+    "kind": "Mẫu động",
+    "text": "Con đã đặt thước đúng rồi. Hãy nhìn vạch ở đầu còn lại của ${object.label} và đọc lại số xăng-ti-mét nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-18. Thực hành ước lượng và đo độ dài",
+    "file": "thuc_hanh_uoc_luong_va_do_do_dai_view.dart",
+    "source_lines": "1273",
+    "document_line": 5480,
+    "context": "_summaryLine",
+    "kind": "Mẫu động",
+    "text": "Các đồ vật ngắn hơn ${widget.pencilCasePaperClipCount} kẹp giấy đã vào hộp bút. Que tính dài 9 kẹp giấy nên không vào được.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-19. Cộng số có hai chữ số với số có một chữ số",
+    "file": "phep_cong_so_co_hai_chu_so_voi_so_co_mot_chu_so_view.dart",
+    "source_lines": "443",
+    "document_line": 5577,
+    "context": "voiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy ta có phép tính ${parts[index]}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-19. Cộng số có hai chữ số với số có một chữ số",
+    "file": "phep_cong_so_co_hai_chu_so_voi_so_co_mot_chu_so_view.dart",
+    "source_lines": "946",
+    "document_line": 5578,
+    "context": "_showVerticalFinalResultAndContinue / advance",
+    "kind": "Mẫu động",
+    "text": "${_resultValue}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-19. Cộng số có hai chữ số với số có một chữ số",
+    "file": "phep_cong_so_co_hai_chu_so_voi_so_co_mot_chu_so_view_structural_checker.dart",
+    "source_lines": "436",
+    "document_line": 5681,
+    "context": "voiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy ta có phép tính ${parts[index]}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-19. Cộng số có hai chữ số với số có một chữ số",
+    "file": "phep_cong_so_co_hai_chu_so_voi_so_co_mot_chu_so_view_structural_checker.dart",
+    "source_lines": "932",
+    "document_line": 5682,
+    "context": "_showVerticalFinalResultAndContinue / advance",
+    "kind": "Mẫu động",
+    "text": "${_resultValue}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-20. Cộng hai số có hai chữ số",
+    "file": "phep_cong_so_co_hai_chu_so_voi_so_co_hai_chu_so_view.dart",
+    "source_lines": "461",
+    "document_line": 5792,
+    "context": "voiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy ta có phép tính ${parts[index]}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-20. Cộng hai số có hai chữ số",
+    "file": "phep_cong_so_co_hai_chu_so_voi_so_co_hai_chu_so_view.dart",
+    "source_lines": "1037",
+    "document_line": 5793,
+    "context": "_showVerticalFinalResultAndContinue / advance",
+    "kind": "Mẫu động",
+    "text": "${_resultValue}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-21. Trừ số có hai chữ số cho số có một chữ số",
+    "file": "phep_tru_so_co_hai_chu_so_cho_so_co_mot_chu_so_view.dart",
+    "source_lines": "462",
+    "document_line": 5920,
+    "context": "voiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy ta có phép tính ${parts[index]}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-21. Trừ số có hai chữ số cho số có một chữ số",
+    "file": "phep_tru_so_co_hai_chu_so_cho_so_co_mot_chu_so_view.dart",
+    "source_lines": "1009",
+    "document_line": 5923,
+    "context": "_showVerticalFinalResultAndContinue / advance",
+    "kind": "Mẫu động",
+    "text": "${_resultValue}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-22. Trừ hai số có hai chữ số",
+    "file": "phep_tru_so_co_hai_chu_so_cho_so_co_hai_chu_so_view.dart",
+    "source_lines": "467",
+    "document_line": 6048,
+    "context": "voiceText",
+    "kind": "Mẫu động",
+    "text": "Vậy ta có phép tính ${parts[index]}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-22. Trừ hai số có hai chữ số",
+    "file": "phep_tru_so_co_hai_chu_so_cho_so_co_hai_chu_so_view.dart",
+    "source_lines": "1031",
+    "document_line": 6051,
+    "context": "_showVerticalFinalResultAndContinue / advance",
+    "kind": "Mẫu động",
+    "text": "${_resultValue}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-23. Xem giờ đúng trên đồng hồ",
+    "file": "xem_gio_dung_tren_dong_ho_man_1_view.dart",
+    "source_lines": "166",
+    "document_line": 6151,
+    "context": "_onNumberTapped / message",
+    "kind": "Mẫu động",
+    "text": "Con hãy chạm vào số ${expectedNumber} trước nhé.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-24. Các ngày trong tuần",
+    "file": "bai_1/cac_ngay_trong_tuan_view.dart",
+    "source_lines": "345",
+    "document_line": 6360,
+    "context": "sentence",
+    "kind": "Mẫu động",
+    "text": "${day.label}, Huy học ${day.activity}.",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-24. Các ngày trong tuần",
+    "file": "bai_1/cac_ngay_trong_tuan_view.dart",
+    "source_lines": "556",
+    "document_line": 6361,
+    "context": "_handleSubmit / message",
+    "kind": "Mẫu động",
+    "text": "Con hãy kiểm tra hai ngày ${_days[expectedDayIndex].label} và ${_days[actualDayIndex].label}: ngày nào đến trước?",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-26. Phép cộng qua 10 trong phạm vi 20",
+    "file": "presentation/pages/phep_cong_qua_10_trong_pham_vi_20_page.dart",
+    "source_lines": "322",
+    "document_line": 6598,
+    "context": "_runSpokenCountSequence",
+    "kind": "Mẫu động",
+    "text": "${10 + i}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-26. Phép cộng qua 10 trong phạm vi 20",
+    "file": "presentation/pages/phep_cong_qua_10_trong_pham_vi_20_page.dart",
+    "source_lines": "361, 378",
+    "document_line": 6599,
+    "context": "_handleOrangeDropped; narrated",
+    "kind": "Mẫu động",
+    "text": "${total}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-27. Phép cộng qua 10 trong phạm vi 20 — phần loại 2",
+    "file": "presentation/pages/phep_cong_qua_10_trong_pham_vi_20_phan_loai_2_page.dart",
+    "source_lines": "418",
+    "document_line": 6701,
+    "context": "_runDotCountReplay",
+    "kind": "Mẫu động",
+    "text": "${10 + i}",
+    "reason": "unresolved_template"
+  },
+  {
+    "lesson": "KP-27. Phép cộng qua 10 trong phạm vi 20 — phần loại 2",
+    "file": "presentation/pages/phep_cong_qua_10_trong_pham_vi_20_phan_loai_2_page.dart",
+    "source_lines": "441",
+    "document_line": 6702,
+    "context": "_handleOrangeDropped",
+    "kind": "Mẫu động",
+    "text": "${total}",
+    "reason": "unresolved_template"
+  }
+]

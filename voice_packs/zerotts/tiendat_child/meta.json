@@ -1,0 +1,20 @@
+{
+  "name": "tiendat_child",
+  "display_name": "Ti\u1ebfn \u0110\u1ea1t - gi\u1ecdng tr\u1ebb h\u00f3a",
+  "language": "vi",
+  "description": "Processed childlike male delivery from Ti\u1ebfn \u0110\u1ea1t",
+  "tags": [
+    "male",
+    "childlike",
+    "processed"
+  ],
+  "source_voice_id": "tiendat",
+  "source_model_revision": "c2bfbd67dc648cac455077333f7cf5c18a2e3bb4",
+  "source_embedding_sha256": "a076fe7b938ad057652ffc4614678395edad90ab5cdc74546f3977636de15d0a",
+  "delivery": {
+    "pitch_semitones": 4.0,
+    "formant_mode": "follow_pitch",
+    "algorithm": "resample_atempo_v2",
+    "tempo": 1.0
+  }
+}

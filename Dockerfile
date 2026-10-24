@@ -25,10 +25,13 @@ RUN pip install --upgrade pip \
     && pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu \
     && pip install -r requirements.txt
 
-COPY --chown=appuser:appuser server.py zerotts_backend.py zerotts_suffix.py tts_delivery.py vtts_backend.py vieneu_backend.py gwen_backend.py gwen_worker.py requirements-gwen.txt README.md LICENSE ./
+COPY --chown=appuser:appuser server.py zerotts_backend.py zerotts_suffix.py tts_delivery.py audio_cache_store.py vtts_backend.py vieneu_backend.py gwen_backend.py gwen_worker.py setup_gwen.py requirements-gwen.txt README.md LICENSE ./
 COPY --chown=appuser:appuser src ./src
 COPY --chown=appuser:appuser voice_packs ./voice_packs
 USER appuser
+
+# Gwen needs a different transformers version, so install it in its own venv.
+RUN python setup_gwen.py --download-model
 
 # Keep model weights in the image so cold starts do not download them again.
 ARG ZEROTTS_REVISION=c2bfbd67dc648cac455077333f7cf5c18a2e3bb4

@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import os
+import hashlib
+import json
+import logging
 import re
+import threading
 import uuid
 from io import BytesIO
 from pathlib import Path
 from typing import Any
+from audio_cache_store import atomic_write, backup_audio, content_digest, read_audio
 
 
 _PROJECT_DIR = Path(__file__).resolve().parent
@@ -37,6 +42,7 @@ class VTTSBackend:
 
     def __init__(self) -> None:
         self._engine: Any | None = None
+        self._audio_lock = threading.RLock()
 
     @property
     def is_loaded(self) -> bool:
@@ -50,6 +56,45 @@ class VTTSBackend:
     @classmethod
     def _voices_dir(cls) -> Path:
         return cls._model_dir() / "voices"
+
+    @classmethod
+    def audio_cache_dir(cls) -> Path:
+        return Path(os.getenv("VTTS_AUDIO_CACHE_DIR", str(cls._model_dir() / "audio_cache")))
+
+    @staticmethod
+    def _asset_digest(path: Path) -> str:
+        try:
+            return content_digest(path)
+        except OSError as exc:
+            raise VTTSBackendError(f"Could not read V-TTS cache asset: {path.name}") from exc
+
+    def _cached_audio(self, text, reference, options, generate):
+        assets = {
+            name: self._asset_digest(Path(os.environ[name]))
+            for name in ("VTTS_CHECKPOINT_PATH", "VTTS_CONFIG_PATH", "VTTS_HASP_PATH")
+            if os.getenv(name)
+        }
+        key = hashlib.sha256(json.dumps([
+            "vtts-wav-v1", text, reference, options, assets,
+            os.getenv("VTTS_HF_REPO", _DEFAULT_VTTS_SPACE),
+            os.getenv("VTTS_AUDIO_CACHE_VERSION", "1"),
+        ], sort_keys=True).encode()).hexdigest()
+        path = self.audio_cache_dir() / f"{key}.wav"
+        with self._audio_lock:
+            try:
+                audio = read_audio(path, "vtts")
+                if len(audio) > 44 and audio[:4] == b"RIFF" and audio[8:12] == b"WAVE":
+                    return audio
+            except OSError:
+                pass
+            audio = generate()
+            if len(audio) > 44 and audio[:4] == b"RIFF" and audio[8:12] == b"WAVE":
+                try:
+                    atomic_write(path, audio)
+                except OSError:
+                    logging.getLogger(__name__).warning("Could not persist V-TTS audio cache")
+                backup_audio(path, "vtts", audio)
+            return audio
 
     @staticmethod
     def _validate_voice_id(voice_id: str) -> str:
@@ -320,6 +365,25 @@ class VTTSBackend:
         noise_scale: float = 0.667,
         noise_scale_w: float = 0.8,
     ) -> bytes:
+        voice_id = self._validate_voice_id(voice_id)
+        profile = self._voices_dir() / f"{voice_id}.npz"
+        if not profile.is_file():
+            raise VTTSVoiceNotFoundError(f"voice_id not found: {voice_id}")
+        options = dict(length_scale=length_scale, noise_scale=noise_scale, noise_scale_w=noise_scale_w)
+        return self._cached_audio(
+            text, ["registered", voice_id, self._asset_digest(profile)], options,
+            lambda: self._synthesize_registered_voice_uncached(text, voice_id, **options),
+        )
+
+    def _synthesize_registered_voice_uncached(
+        self,
+        text: str,
+        voice_id: str,
+        *,
+        length_scale: float = 1.0,
+        noise_scale: float = 0.667,
+        noise_scale_w: float = 0.8,
+    ) -> bytes:
         """Synthesize speech from a persisted voice profile and text only."""
         engine = self._load_engine()
         speaker, prosody = self._load_voice_embeddings(voice_id)
@@ -340,6 +404,21 @@ class VTTSBackend:
             raise VTTSBackendError(f"V-TTS không tạo được audio: {exc}") from exc
 
     def synthesize_wav(
+        self,
+        text: str,
+        reference_audio: Path,
+        *,
+        length_scale: float = 1.0,
+        noise_scale: float = 0.667,
+        noise_scale_w: float = 0.8,
+    ) -> bytes:
+        options = dict(length_scale=length_scale, noise_scale=noise_scale, noise_scale_w=noise_scale_w)
+        return self._cached_audio(
+            text, ["reference", self._asset_digest(reference_audio)], options,
+            lambda: self._synthesize_wav_uncached(text, reference_audio, **options),
+        )
+
+    def _synthesize_wav_uncached(
         self,
         text: str,
         reference_audio: Path,

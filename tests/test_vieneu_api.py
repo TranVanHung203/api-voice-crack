@@ -82,6 +82,7 @@ def test_vieneu_errors(monkeypatch, error, status):
 
 
 def test_vieneu_fixed_voice_and_conflicting_aliases(monkeypatch):
+    monkeypatch.setattr(server, "FIXED_PROVIDER", None)
     captured = []
 
     def synthesize(text, voice_id):

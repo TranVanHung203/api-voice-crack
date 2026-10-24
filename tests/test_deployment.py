@@ -54,10 +54,18 @@ def test_gradio_builder_receives_self_contained_dependencies():
     assert {"aiohttp", "tabulate", "faster-whisper", "transformers", "torch"} <= names
     assert "zerotts_suffix.py" in payload
     assert "tts_delivery.py" in payload
+    assert "audio_cache_store.py" in payload
     assert "vieneu_backend.py" in payload
     assert "vieneu" in names
     assert "gwen_backend.py" in payload and "gwen_worker.py" in payload
+    assert "setup_gwen.py" in payload
     assert "requirements-gwen.txt" in payload
     assert "voice_packs/gwen/data/ref_audio/yen_nhi.wav" in payload
     assert "voice_packs/gwen/data/ref_info.json" in payload
     assert "ffmpeg" in payload["packages.txt"].decode("utf-8").splitlines()
+    for name in ("voice.npz", "voice.bin", "meta.json"):
+        assert f"voice_packs/zerotts/VpYLlCQEgcoHgycJstNP_child/{name}" in payload
+    assert "voice_packs/zerotts/model_voices.json" in payload
+    for voice in ("quangminh_child", "tiendat_child", "quangvinh_child", "htSzITlVXGL3s4XwNqOv"):
+        for name in ("voice.npz", "meta.json"):
+            assert f"voice_packs/zerotts/{voice}/{name}" in payload

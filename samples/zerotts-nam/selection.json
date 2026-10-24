@@ -1,0 +1,13 @@
+{
+  "voice_id": "VpYLlCQEgcoHgycJstNP",
+  "text": "Năm",
+  "before": {"file": "before.wav", "seed": 23011110},
+  "after": {"file": "after.wav", "seed": 11},
+  "measurement": "Approximate final audible energy using 10 ms RMS windows above 10% of peak RMS; this is a waveform comparison, not a listening evaluation.",
+  "before_duration_seconds": 0.8297083333333334,
+  "before_last_active_window_end_seconds": 0.83,
+  "after_duration_seconds": 0.8197916666666667,
+  "after_last_active_window_end_seconds": 0.74,
+  "after_trailing_release_seconds": 0.0797916666666667,
+  "environment": "Generated through the existing local API with hidden continuation enabled, default synthesis settings except seed."
+}

@@ -1,0 +1,24 @@
+{
+  "text": "Hãy cùng khám phá nhé!",
+  "source_voice_id": "VpYLlCQEgcoHgycJstNP",
+  "profiles": [
+    {
+      "name": "soft",
+      "pitch_semitones": 3.0,
+      "formant_ratio": 1.08,
+      "seconds": 1.8128333333333333
+    },
+    {
+      "name": "child",
+      "pitch_semitones": 4.0,
+      "formant_ratio": 1.1,
+      "seconds": 1.8124375
+    },
+    {
+      "name": "higher",
+      "pitch_semitones": 5.0,
+      "formant_ratio": 1.12,
+      "seconds": 1.8037291666666666
+    }
+  ]
+}

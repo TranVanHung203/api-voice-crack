@@ -1,0 +1,18 @@
+{
+  "name": "htSzITlVXGL3s4XwNqOv",
+  "display_name": "Quang Vinh",
+  "language": "vi",
+  "description": "Male, Young, Southern",
+  "tags": [
+    "male",
+    "young",
+    "southern"
+  ],
+  "provenance": {
+    "catalog": "https://api-prod.zeroweight.ai/api/v1/audio/voices/public?type=community",
+    "retrieved_on": "2026-10-21",
+    "is_public": true,
+    "source_voice_id": "htSzITlVXGL3s4XwNqOv",
+    "voice_bin_sha256": "b2dfc6e9c6de0ff3c6c916ef1c4aceb83ccc6583c6e277d695d6b173b96f719e"
+  }
+}
